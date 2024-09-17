@@ -32,9 +32,9 @@ etcd02.ocp.cloud.lab.    IN    A     10.10.0.202
 etcd03.ocp.cloud.lab.    IN    A     10.10.0.203
 
 ; OpenShift Internal SRV records (cluster name = lab)
-_etcd-server-ssl._tcp.ocp.cloud.lab.    86400     IN    SRV     0    10    2380    etcd01.lab
-_etcd-server-ssl._tcp.ocp.cloud.lab.    86400     IN    SRV     0    10    2380    etcd02.lab
-_etcd-server-ssl._tcp.ocp.cloud.lab.    86400     IN    SRV     0    10    2380    etcd03.lab
+_etcd-server-ssl._tcp.ocp.cloud.lab.    86400     IN    SRV     0    10    2380    etcd01.
+_etcd-server-ssl._tcp.ocp.cloud.lab.    86400     IN    SRV     0    10    2380    etcd02.
+_etcd-server-ssl._tcp.ocp.cloud.lab.    86400     IN    SRV     0    10    2380    etcd03.
 
 oauth-openshift.apps.ocp.cloud.lab.     IN     A     10.10.0.1
 console-openshift-console.apps.ocp.cloud.lab.     IN     A     10.10.0.1
