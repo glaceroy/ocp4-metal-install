@@ -9,15 +9,15 @@ $TTL    604800
 
   IN      NS      utility.ocp.cloud.lab.
 
-1      IN    PTR    utility.ocp.cloud.lab. 
-1      IN    PTR    api.ocp.cloud.lab.
-1      IN    PTR    api-int.ocp.cloud.lab.
+1.0.10.10.in-addr.arpa      IN    PTR    utility.ocp.cloud.lab. 
+1.0.10.10.in-addr.arpa      IN    PTR    api.ocp.cloud.lab.
+1.0.10.10.in-addr.arpa      IN    PTR    api-int.ocp.cloud.lab.
 ;
-200    IN    PTR    bootstrap.ocp.cloud.lab.
+200.0.10.10.in-addr.arpa    IN    PTR    bootstrap.ocp.cloud.lab.
 ;
-201    IN    PTR    master01.ocp.cloud.lab.
-202    IN    PTR    master02.ocp.cloud.lab.
-203    IN    PTR    master03.ocp.cloud.lab.
+201.0.10.10.in-addr.arpa    IN    PTR    master01.ocp.cloud.lab.
+202.0.10.10.in-addr.arpa    IN    PTR    master02.ocp.cloud.lab.
+203.0.10.10.in-addr.arpa    IN    PTR    master03.ocp.cloud.lab.
 ;
-211    IN    PTR    worker01.ocp.cloud.lab.
-212    IN    PTR    worker02.ocp.cloud.lab.
+211.0.10.10.in-addr.arpa    IN    PTR    worker01.ocp.cloud.lab.
+212.0.10.10.in-addr.arpa    IN    PTR    worker02.ocp.cloud.lab.
