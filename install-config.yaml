@@ -17,13 +17,6 @@ networking:
   networkType: OVNKubernetes
   serviceNetwork:
     - 172.30.0.0/16
-imageContentSources:
-- mirrors:
-  - utility:8443/ocp4/openshift4
-  source: quay.io/openshift-release-dev/ocp-release
-- mirrors:
-  - utility:8443/ocp4/openshift4
-  source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
 platform:
   none: {}
 fips: false
