@@ -20,3 +20,4 @@ $TTL    604800
 203    IN    PTR    master03.ocp.cloud.lab.
 ;
 211    IN    PTR    worker01.ocp.cloud.lab.
+212    IN    PTR    worker02.ocp.cloud.lab.
