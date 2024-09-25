@@ -22,11 +22,15 @@ worker02.ocp.cloud.lab  - BC:24:11:6A:AA:84
 bootstrap.ocp.cloud.lab - BC:24:11:8D:D7:E1
 utility.ocp.cloud.lab - 92.168.0.47
 
+*** Commands to be run to generate manifests and ignition config ***
+
+./openshift-install create manifests --dir ~/ocp4-install/
+./openshift-install create ignition-configs --dir ~/ocp4-install/
 
 *** Commands to be run on the bootstrap, master and worker nodes during bootup ***
 
-sudo coreos-installer install --ignition-url http://10.10.0.1:8080/ocp4/bootstrap.ign /dev/sda --insecure --insecure-ignition
-sudo coreos-installer install --ignition-url http://10.10.0.1:8080/ocp4/master.ign /dev/sda --insecure --insecure-ignition
+sudo coreos-installer install /dev/sda --ignition-url http://10.10.0.1:8080/ocp4/bootstrap.ign  --insecure --insecure-ignition
+sudo coreos-installer install /dev/sda --ignition-url http://10.10.0.1:8080/ocp4/master.ign --insecure --insecure-ignition
 sudo coreos-installer install /dev/sda --ignition-url http://10.10.0.1:8080/ocp4/worker.ign --insecure --insecure-ignition
 
 
