@@ -42,9 +42,9 @@ platform:
     apiVIPs:
     - 10.10.0.1
     ingressVIPs:
-    - 10.10.0.1
+    - 10.10.0.2
 fips: false
-imageContentSources:
+imageDigestSources:
 - mirrors:
   - utility:8443/ocp4/openshift4
   source: quay.io/openshift-release-dev/ocp-release
