@@ -43,6 +43,8 @@ sudo coreos-installer install /dev/sda --ignition-url http://10.10.0.1:8080/ocp4
 ./openshift-install create cluster --dir ~/ocp4-install/ --log-level debug 
 
 
+https://www.redhat.com/en/blog/red-hat-openshift-disconnected-installations
+
 *** Mirror Registry commands and setup ***
 
 OCP_RELEASE="4.16.9"
