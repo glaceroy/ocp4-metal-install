@@ -1,10 +1,12 @@
 apiVersion: v1
 baseDomain: cloud.lab
 compute:
-  - hyperthreading: Enabled
+  - architecture: amd64
+    hyperthreading: Enabled
     name: worker
-    replicas: 0 # Must be set to 0 for User Provisioned Installation as worker nodes will be manually deployed.
+    replicas: 2 # Must be set to 0 for User Provisioned Installation as worker nodes will be manually deployed.
 controlPlane:
+  architecture: amd64
   hyperthreading: Enabled
   name: master
   replicas: 3
@@ -12,11 +14,36 @@ metadata:
   name: ocp # Cluster name
 networking:
   clusterNetwork:
-    - cidr: 10.128.0.0/14
-      hostPrefix: 23
+  - cidr: 10.128.0.0/14
+    hostPrefix: 23
+  machineNetwork:
+  - cidr: 10.10.0.0/24
   networkType: OVNKubernetes
   serviceNetwork:
-    - 172.30.0.0/16
+  - 172.30.0.0/16
+platform:
+  baremetal:
+    hosts:
+      - name: master01
+        role: master
+        bootMACAddress: BC:24:11:44:45:DB
+      - name: master02
+        role: master
+        bootMACAddress: BC:24:11:A4:9D:59
+      - name: master03
+        role: master
+        bootMACAddress: BC:24:11:8D:C5:DB
+      - name: worker01
+        role: worker
+        bootMACAddress: BC:24:11:EC:00:D4
+      - name: worker02
+        role: worker
+        bootMACAddress: BC:24:11:6A:AA:84
+    apiVIPs:
+    - 10.10.0.1
+    ingressVIPs:
+    - 10.10.0.1
+fips: false
 imageContentSources:
 - mirrors:
   - utility:8443/ocp4/openshift4
@@ -24,9 +51,6 @@ imageContentSources:
 - mirrors:
   - utility:8443/ocp4/openshift4
   source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
-platform:
-  none: {}
-fips: false
 pullSecret: '{"auths":{"cloud.openshift.com":{"auth":"b3BlbnNoaWZ0LXJlbGVhc2UtZGV2K29jbV9hY2Nlc3NfZTg4NDQ2N2VlZmEzNGJiMWEwOGZjNDMwODQyODc3OWI6RVlHR09DUloxNUVCRVMzM0o1N1NaMDNVWDZORzdPWVFSSzFQTTJMM0o0SU1WR01BQ0lWT0xSNzlCWUlTVzdJMw==","email":"mohsin.aejaz.ahmad.khan@kyndryl.com"},"quay.io":{"auth":"b3BlbnNoaWZ0LXJlbGVhc2UtZGV2K29jbV9hY2Nlc3NfZTg4NDQ2N2VlZmEzNGJiMWEwOGZjNDMwODQyODc3OWI6RVlHR09DUloxNUVCRVMzM0o1N1NaMDNVWDZORzdPWVFSSzFQTTJMM0o0SU1WR01BQ0lWT0xSNzlCWUlTVzdJMw==","email":"mohsin.aejaz.ahmad.khan@kyndryl.com"},"registry.connect.redhat.com":{"auth":"fHVoYy1wb29sLTI0M2U3NzYxLWZhYjMtNDFjZS1hMWViLWJiNWFmMmYwMTQyNzpleUpoYkdjaU9pSlNVelV4TWlKOS5leUp6ZFdJaU9pSXhaVGhpWkRobFpXVXlZelEwWm1Jd09EaGxNMlF6WkRRd1lqZ3pPVGN3TUNKOS5TTXgxX2hzNkUyOEIwQ3BlQ0pITTAwWlhTa3pCZm5ZdzFYUVo0T1FyVkExVlhRREpmTk9pSkNZVjdfeTNrYUxEOUF3WXRCNHRLWklMSkRZOTBiWi0tY3ZqdmZfZmVQeEpidXgtbUNOOVE3S0Z1b2RtcTUtTzN4Q2RUVlktMkZVNEhkZElQTk9qQlp1OXZsUDJKdUtiZUdYZklhS1g5R2FRWV8zRWlfVWhNdkNva2RkM2JqN1lsVGhvZlUtLTR0TGNoT29wWm1nLXlxT3BtSUNNaWJtUmI4ZU9HcERNN3oweXdBaDJuYWw1b0JGeVVJZ2syQXZLTFBjX0hQVDJwSDNRTS1IcGpqc3hSRDYxZGhuSmsyWHNKclZEUENPM0o5MkNIX0Qtc1VVd1RFVnpNRWR5WlFrQlZyUi1YS1FlUjE0YjNjbFJCQnZtVnJxM3k3ZENzMFVuZHJJbk5odUgtVXN0Zmd6MFB4WFpuckV2WVVLM1ZFQlBvVjk4NS1BREJ1dmJHOFF1TW1zcjVOR1huOUprb3A3bDhfRFFiN3lmcXpCYWxfVzZpWUV5VDRZSFJzcF8xMHZtN0ppU1lOZ2Z3NXZzOGptRy1OZHZOSUt2TFBlMW4tYVh2VDlNd3h1ZmlHdVBkTm8wcU5hcFdxWENRVmhMWXdMdEVZanVraHd2ckpzS2ZqTkE1dnI1d3l1aV9JajV6aVdUanktRmN6X3NHdDR2anIwSDBCc0p3MTgyalFoMnE3TFBRa0daMGg5dEFOcTkweUViSUFjbHJQSFo5Y19kSWt4UVM1T2hheXlGRjRIbkduZEstSXAzSTFnM1g1empQYk1KUkNqR190LVhVNzI5cUtfSk9yd0NhcXBwWUgtQ2NWMjZIZVV3d2VUOHJoOGp5Yi1kSUR2X3Vfbw==","email":"mohsin.aejaz.ahmad.khan@kyndryl.com"},"registry.redhat.io":{"auth":"fHVoYy1wb29sLTI0M2U3NzYxLWZhYjMtNDFjZS1hMWViLWJiNWFmMmYwMTQyNzpleUpoYkdjaU9pSlNVelV4TWlKOS5leUp6ZFdJaU9pSXhaVGhpWkRobFpXVXlZelEwWm1Jd09EaGxNMlF6WkRRd1lqZ3pPVGN3TUNKOS5TTXgxX2hzNkUyOEIwQ3BlQ0pITTAwWlhTa3pCZm5ZdzFYUVo0T1FyVkExVlhRREpmTk9pSkNZVjdfeTNrYUxEOUF3WXRCNHRLWklMSkRZOTBiWi0tY3ZqdmZfZmVQeEpidXgtbUNOOVE3S0Z1b2RtcTUtTzN4Q2RUVlktMkZVNEhkZElQTk9qQlp1OXZsUDJKdUtiZUdYZklhS1g5R2FRWV8zRWlfVWhNdkNva2RkM2JqN1lsVGhvZlUtLTR0TGNoT29wWm1nLXlxT3BtSUNNaWJtUmI4ZU9HcERNN3oweXdBaDJuYWw1b0JGeVVJZ2syQXZLTFBjX0hQVDJwSDNRTS1IcGpqc3hSRDYxZGhuSmsyWHNKclZEUENPM0o5MkNIX0Qtc1VVd1RFVnpNRWR5WlFrQlZyUi1YS1FlUjE0YjNjbFJCQnZtVnJxM3k3ZENzMFVuZHJJbk5odUgtVXN0Zmd6MFB4WFpuckV2WVVLM1ZFQlBvVjk4NS1BREJ1dmJHOFF1TW1zcjVOR1huOUprb3A3bDhfRFFiN3lmcXpCYWxfVzZpWUV5VDRZSFJzcF8xMHZtN0ppU1lOZ2Z3NXZzOGptRy1OZHZOSUt2TFBlMW4tYVh2VDlNd3h1ZmlHdVBkTm8wcU5hcFdxWENRVmhMWXdMdEVZanVraHd2ckpzS2ZqTkE1dnI1d3l1aV9JajV6aVdUanktRmN6X3NHdDR2anIwSDBCc0p3MTgyalFoMnE3TFBRa0daMGg5dEFOcTkweUViSUFjbHJQSFo5Y19kSWt4UVM1T2hheXlGRjRIbkduZEstSXAzSTFnM1g1empQYk1KUkNqR190LVhVNzI5cUtfSk9yd0NhcXBwWUgtQ2NWMjZIZVV3d2VUOHJoOGp5Yi1kSUR2X3Vfbw==","email":"mohsin.aejaz.ahmad.khan@kyndryl.com"},"utility:8443":{"auth":"aW5pdDpiOWxPbk5aM1RmVTRYUTEyeWc1SnNkcjdxYXQ4MDZQcA==","email":"mohsin.aejaz.ahmad.khan@kyndryl.com"}}}'
 sshKey: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCa5oXw7mm1tUYkCFhbD72XnpZyMU9LaAeLZ0OWCUFP0eADxpx4viNgPB9Ol1wHkJ5e0d+5tvd7ppZvpruedtB2q3MeShuFRSOatK+gU5ixvghF0opTO5S1Q3liholfmuw1UDbmJvcLgG/6iNbrdvPw8v6exuIUsEjLIbKfGAUfuIdRTzreIZ5hQZ92hH1lRVCXxzr3DUsGiuVBSYlOKKKbzPQ5imC3HndCRdSUOhoMCNLuAJij/2YXBhbNxN+BzntL1p+XOEIcK69nDrLAN4JZXTP7hIDjysDJ0j6CyoLGEx9xYCww9xlhaiGuDT8CnQh0OynEONc/F49L96plnT8XNTlfV8BPdSzNG+taIJOiQv3RJfCIrW0MgAIZR7XXnisH4QVHmMwge5FZBT9vPhm39fl6QW3wIct/W2hljja5oSHu1BrFBu0ZH3AtsmCg0Zp+8AL08hctpvdgaU9BGWE7MpNx5qsb6JcSWkMoTyrgVz7OrsYb5wm/DvB5rsNloFE= root@utility"
 additionalTrustBundle: |

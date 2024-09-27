@@ -27,6 +27,7 @@ utility.ocp.cloud.lab - 92.168.0.47
 ./openshift-install create manifests --dir ~/ocp4-install/
 ./openshift-install create ignition-configs --dir ~/ocp4-install/
 
+
 *** Commands to be run on the bootstrap, master and worker nodes during bootup ***
 
 sudo coreos-installer install /dev/sda --ignition-url http://10.10.0.1:8080/ocp4/bootstrap.ign  --insecure --insecure-ignition

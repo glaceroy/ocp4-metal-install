@@ -1,0 +1,141 @@
+apiVersion: v1alpha1
+kind: AgentConfig
+metadata:
+  name: ocp-cloud
+rendezvousIP: 10.10.0.200
+hosts:
+  - hostname: master01
+    role: master
+    interfaces:
+      - name: ens18
+        macAddress: BC:24:11:44:45:DB
+    networkConfig:
+      interfaces:
+        - name: ens18
+          type: ethernet
+          state: up
+          mac-address: BC:24:11:44:45:DB
+          ipv4:
+            enabled: true
+            address:
+              - ip: 10.10.0.201
+                prefix-length: 24 
+            dhcp: false
+      dns-resolver:
+        config:
+          server:
+            - 10.10.0.1
+      routes:
+        config:
+          - destination: 0.0.0.0/0
+            next-hop-address: 10.10.0.1
+            next-hop-interface: ens19
+            table-id: 254
+  - hostname: master02
+    role: master
+    interfaces:
+      - name: ens18
+        macAddress: BC:24:11:A4:9D:59
+    networkConfig:
+      interfaces:
+        - name: ens18
+          type: ethernet
+          state: up
+          mac-address: BC:24:11:A4:9D:59
+          ipv4:
+            enabled: true
+            address:
+              - ip: 10.10.0.202
+                prefix-length: 24
+            dhcp: false
+      dns-resolver:
+        config:
+          server:
+            - 10.10.0.1
+      routes:
+        config:
+          - destination: 0.0.0.0/0
+            next-hop-address: 10.10.0.1
+            next-hop-interface: ens19
+            table-id: 254
+  - hostname: master03
+    role: master
+    interfaces:
+      - name: ens18
+        macAddress: BC:24:11:8D:C5:DB
+    networkConfig:
+      interfaces:
+        - name: ens18
+          type: ethernet
+          state: up
+          mac-address: BC:24:11:8D:C5:DB
+          ipv4:
+            enabled: true
+            address:
+              - ip: 10.10.0.203
+                prefix-length: 24
+            dhcp: false
+      dns-resolver:
+        config:
+          server:
+            - 10.10.0.1
+      routes:
+        config:
+          - destination: 0.0.0.0/0
+            next-hop-address: 10.10.0.1
+            next-hop-interface: ens19
+            table-id: 254
+  - hostname: worker01
+    role: worker
+    interfaces:
+      - name: ens18
+        macAddress: BC:24:11:EC:00:D4
+    networkConfig:
+      interfaces:
+        - name: ens18
+          type: ethernet
+          state: up
+          mac-address: BC:24:11:EC:00:D4
+          ipv4:
+            enabled: true
+            address:
+              - ip: 10.10.0.211
+                prefix-length: 24
+            dhcp: false
+      dns-resolver:
+        config:
+          server:
+            - 10.10.0.1
+      routes:
+        config:
+          - destination: 0.0.0.0/0
+            next-hop-address: 10.10.0.1
+            next-hop-interface: ens19
+            table-id: 254
+  - hostname: worker02
+    role: worker
+    interfaces:
+      - name: ens18
+        macAddress: BC:24:11:6A:AA:84
+    networkConfig:
+      interfaces:
+        - name: ens18
+          type: ethernet
+          state: up
+          mac-address: BC:24:11:6A:AA:84
+          ipv4:
+            enabled: true
+            address:
+              - ip: 10.10.0.212
+                prefix-length: 24
+            dhcp: false
+      dns-resolver:
+        config:
+          server:
+            - 10.10.0.1
+      routes:
+        config:
+          - destination: 0.0.0.0/0
+            next-hop-address: 10.10.0.1
+            next-hop-interface: ens19
+            table-id: 254
