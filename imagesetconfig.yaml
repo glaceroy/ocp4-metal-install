@@ -8,8 +8,8 @@ mirror:
   platform:
     channels:
     - name: stable-4.16               # Version of OpenShift to be mirrored
-      minVersion: 4.16.14             # Minimum version of OpenShift to be mirrored
-      maxVersion: 4.16.15             # Maximum version of OpenShift to be mirrored
+      minVersion: 4.16.12             # Minimum version of OpenShift to be mirrored
+      maxVersion: 4.16.13             # Maximum version of OpenShift to be mirrored
       shortestPath: true
       type: ocp
     graph: true                       # This parameter will be useful when updating the cluster in disconnected setup with OSUS operator
