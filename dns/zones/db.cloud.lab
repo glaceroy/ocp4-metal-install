@@ -25,7 +25,7 @@ worker02.ocp.cloud.lab.   IN      A      10.10.0.212
 ; OpenShift Internal - Load balancer
 api.ocp.cloud.lab.        IN    A    10.10.0.1
 api-int.ocp.cloud.lab.    IN    A    10.10.0.1
-*.apps.ocp.cloud.lab.     IN    A    10.10.0.1
+*.apps.ocp.cloud.lab.     IN    A    10.10.0.2
 
 ; ETCD Cluster
 etcd01.ocp.cloud.lab.    IN    A     10.10.0.201
