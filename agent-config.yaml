@@ -2,7 +2,7 @@ apiVersion: v1alpha1
 kind: AgentConfig
 metadata:
   name: ocp-cloud
-rendezvousIP: 10.10.0.200
+rendezvousIP: 10.10.0.201
 hosts:
   - hostname: master01
     role: master
