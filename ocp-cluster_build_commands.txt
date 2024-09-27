@@ -55,8 +55,8 @@ ARCHITECTURE="x86_64"
 
 https://docs.openshift.com/container-platform/4.16/installing/disconnected_install/installing-mirroring-installation-images.html#installing-mirroring-installation-images
 
-INFO[2024-09-24 19:45:43] Quay installed successfully, config data is stored in ~/quay-install 
-INFO[2024-09-24 19:45:43] Quay is available at https://utility:8443 with credentials (init, b9lOnNZ3TfU4XQ12yg5Jsdr7qat806Pp)
+INFO[2024-09-27 19:08:21] Quay installed successfully, config data is stored in /root/ocpmirror 
+INFO[2024-09-27 19:08:21] Quay is available at https://utility.cloud.lab:8443 with credentials (init, Y1pls843EWUeoguGIJK2OH5m0nvb976r) 
 
 oc adm release mirror -a ${LOCAL_SECRET_JSON} --from=quay.io/${PRODUCT_REPO}/${RELEASE_NAME}:${OCP_RELEASE}-${ARCHITECTURE} --to=${LOCAL_REGISTRY}/${LOCAL_REPOSITORY} --to-release-image=${LOCAL_REGISTRY}/${LOCAL_REPOSITORY}:${OCP_RELEASE}-${ARCHITECTURE} --insecure-skip-tls-verify=true
 
