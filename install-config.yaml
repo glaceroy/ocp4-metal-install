@@ -23,22 +23,6 @@ networking:
   - 172.30.0.0/16
 platform:
   baremetal:
-    hosts:
-      - name: master01
-        role: master
-        bootMACAddress: BC:24:11:44:45:DB
-      - name: master02
-        role: master
-        bootMACAddress: BC:24:11:A4:9D:59
-      - name: master03
-        role: master
-        bootMACAddress: BC:24:11:8D:C5:DB
-      - name: worker01
-        role: worker
-        bootMACAddress: BC:24:11:EC:00:D4
-      - name: worker02
-        role: worker
-        bootMACAddress: BC:24:11:6A:AA:84
     apiVIPs:
     - 10.10.0.1
     ingressVIPs:
