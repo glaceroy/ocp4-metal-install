@@ -6,6 +6,8 @@ rendezvousIP: 10.10.0.201
 hosts:
   - hostname: master01.ocp.cloud.lab
     role: master
+    rootDeviceHints:
+      deviceName: "/dev/sda"
     interfaces:
       - name: ens18
         macAddress: BC:24:11:44:45:DB
@@ -33,6 +35,8 @@ hosts:
             table-id: 254
   - hostname: master02.ocp.cloud.lab
     role: master
+    rootDeviceHints:
+      deviceName: "/dev/sda"
     interfaces:
       - name: ens18
         macAddress: BC:24:11:A4:9D:59
@@ -60,6 +64,8 @@ hosts:
             table-id: 254
   - hostname: master03.ocp.cloud.lab
     role: master
+    rootDeviceHints:
+      deviceName: "/dev/sda"
     interfaces:
       - name: ens18
         macAddress: BC:24:11:8D:C5:DB
@@ -87,6 +93,8 @@ hosts:
             table-id: 254
   - hostname: worker01.ocp.cloud.lab
     role: worker
+    rootDeviceHints:
+      deviceName: "/dev/sda"
     interfaces:
       - name: ens18
         macAddress: BC:24:11:EC:00:D4
@@ -114,6 +122,8 @@ hosts:
             table-id: 254
   - hostname: worker02.ocp.cloud.lab
     role: worker
+    rootDeviceHints:
+      deviceName: "/dev/sda"
     interfaces:
       - name: ens18
         macAddress: BC:24:11:6A:AA:84
