@@ -6,7 +6,7 @@ storageConfig:
     skipTLS: false
 mirror:
   platform:
-    architecture:
+    architectures:
     - "amd64"
     channels:
     - name: stable-4.16               # Version of OpenShift to be mirrored
