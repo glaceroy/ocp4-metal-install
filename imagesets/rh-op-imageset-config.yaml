@@ -38,14 +38,6 @@ mirror:                      # This parameter will be useful when updating the c
       channels:
       - name: stable
         minVersion: '2.5.2-0'
-    - name: devworkspace-operator
-      channels:
-      - name: fast
-        minVersion: '0.29.0'
-    - name: web-terminal
-      channels:
-      - name: fast
-        minVersion: 'v1.10.0-0.1720435222.p'
     - name: redhat-oadp-operator
       channels:
       - name: stable-1.4
