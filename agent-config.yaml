@@ -4,7 +4,7 @@ metadata:
   name: ocp-cloud
 rendezvousIP: 10.10.0.201
 hosts:
-  - hostname: master01
+  - hostname: master01.ocp.cloud.lab
     role: master
     interfaces:
       - name: ens18
@@ -31,7 +31,7 @@ hosts:
             next-hop-address: 10.10.0.1
             next-hop-interface: ens19
             table-id: 254
-  - hostname: master02
+  - hostname: master02.ocp.cloud.lab
     role: master
     interfaces:
       - name: ens18
@@ -58,7 +58,7 @@ hosts:
             next-hop-address: 10.10.0.1
             next-hop-interface: ens19
             table-id: 254
-  - hostname: master03
+  - hostname: master03.ocp.cloud.lab
     role: master
     interfaces:
       - name: ens18
@@ -85,7 +85,7 @@ hosts:
             next-hop-address: 10.10.0.1
             next-hop-interface: ens19
             table-id: 254
-  - hostname: worker01
+  - hostname: worker01.ocp.cloud.lab
     role: worker
     interfaces:
       - name: ens18
@@ -112,7 +112,7 @@ hosts:
             next-hop-address: 10.10.0.1
             next-hop-interface: ens19
             table-id: 254
-  - hostname: worker02
+  - hostname: worker02.ocp.cloud.lab
     role: worker
     interfaces:
       - name: ens18
