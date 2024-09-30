@@ -20,7 +20,7 @@ provider "proxmox" {
 }
 
 # Creates a proxmox_vm_qemu entity named blog_demo_test
-resource "proxmox_vm_qemu" "blog_demo_test" {
+resource "proxmox_vm_qemu" "utility" {
   name = "test_vm${count.index + 1}" # count.index starts at 0
   #name = "test-vm-01"
   count = 1 # Establishes how many instances will be created 

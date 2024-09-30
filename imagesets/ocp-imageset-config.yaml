@@ -2,10 +2,12 @@ kind: ImageSetConfiguration
 apiVersion: mirror.openshift.io/v1alpha2
 storageConfig:
   registry:
-    imageURL: utility.cloud.lab:8443/mirror/oc-mirror-metadata # Local mirror registry URL
+    imageURL: utility.cloud.lab:8443/mirror/oc-mirror-metadata-platform # Local mirror registry URL
     skipTLS: false
 mirror:
   platform:
+    architecture:
+    - "amd64"
     channels:
     - name: stable-4.16               # Version of OpenShift to be mirrored
       minVersion: 4.16.12             # Minimum version of OpenShift to be mirrored
@@ -13,8 +15,10 @@ mirror:
       shortestPath: true
       type: ocp
     graph: true                       # This parameter will be useful when updating the cluster in disconnected setup with OSUS operator
-  operators:
-  - catalog: registry.redhat.io/redhat/redhat-operator-index:v4.16 # Version of the operators catalog to be mirrored. 
   additionalImages:
   - name: registry.redhat.io/ubi8/ubi:latest
+  - name: registry.redhat.io/ubi9/ubi:latest
+  - name: registry.redhat.io/openshift4/ose-cli:latest
+  - name: registry.redhat.io/openshift4/ose-deployer:latest
+  - name: registry.redhat.io/rhel8/support-tools:latest
   helm: {}
