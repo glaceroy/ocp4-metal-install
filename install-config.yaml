@@ -4,7 +4,7 @@ compute:
   - architecture: amd64
     hyperthreading: Enabled
     name: worker
-    replicas: 2 # Must be set to 0 for User Provisioned Installation as worker nodes will be manually deployed.
+    replicas: 0 # Must be set to 0 for User Provisioned Installation as worker nodes will be manually deployed.
 controlPlane:
   architecture: amd64
   hyperthreading: Enabled
@@ -16,17 +16,11 @@ networking:
   clusterNetwork:
   - cidr: 10.128.0.0/14
     hostPrefix: 23
-  machineNetwork:
-  - cidr: 10.10.0.0/24
   networkType: OVNKubernetes
   serviceNetwork:
   - 172.30.0.0/16
 platform:
-  baremetal:
-    apiVIPs:
-    - 10.10.0.1
-    ingressVIPs:
-    - 10.10.0.2
+  none: {}
 fips: false
 imageDigestSources:
 - mirrors:
