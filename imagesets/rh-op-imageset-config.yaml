@@ -21,7 +21,7 @@ mirror:                      # This parameter will be useful when updating the c
     - name: kiali-ossm
       channels:
       - name: stable
-        minVersion: '1.73.10'
+        minVersion: '1.89.1'
     - name: local-storage-operator
       channels:
       - name: stable
@@ -29,7 +29,7 @@ mirror:                      # This parameter will be useful when updating the c
     - name: openshift-gitops-operator
       channels:
       - name: latest
-        minVersion: '1.14.0'
+        minVersion: '1.14.0-16'
     - name: openshift-pipelines-operator-rh
       channels:
       - name: latest
@@ -39,7 +39,7 @@ mirror:                      # This parameter will be useful when updating the c
     - name: servicemeshoperator
       channels:
       - name: stable
-        minVersion: '2.5.2-0'
+        minVersion: '2.6.1-9'
     - name: redhat-oadp-operator
       channels:
       - name: stable-1.4
