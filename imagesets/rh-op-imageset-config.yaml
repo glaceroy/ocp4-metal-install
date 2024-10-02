@@ -29,17 +29,15 @@ mirror:                      # This parameter will be useful when updating the c
     - name: openshift-gitops-operator
       channels:
       - name: latest
-        minVersion: '1.14.0-16'
+        minVersion: '1.14.0'
     - name: openshift-pipelines-operator-rh
       channels:
       - name: latest
         minVersion: '1.15.1'
-      - name: pipelines-1.15
-        minVersion: '1.15.1'
     - name: servicemeshoperator
       channels:
       - name: stable
-        minVersion: '2.6.1-9'
+        minVersion: '2.6.1'
     - name: redhat-oadp-operator
       channels:
       - name: stable-1.4
