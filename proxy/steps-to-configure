@@ -1,0 +1,23 @@
+install squid
+configure as per the conf file
+add the proxy server cert in /etc/squid/ssl_certs
+add the ca in user-ca-bundle and include in proxy config
+
+https://elatov.github.io/2019/01/using-squid-to-proxy-ssl-sites/
+
+lab.v3.ext 
+authorityKeyIdentifier=keyid,issuer
+basicConstraints=CA:FALSE
+keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment
+subjectAltName = @alt_names
+[alt_names]
+DNS.1 = utility.cloud.lab
+IP.1 = 10.10.0.1
+
+create lab root ca
+  1. openssl genrsa -des3 -out ca.key 4096
+  2. openssl req -x509 -new -nodes -key ca.key -sha256 -days 3650 -out ca.crt -subj '/C=UK/ST=Cheshire/L=Cheshire/O=Homelab/OU=Cloud/CN=Homelab Root CA'
+
+create proxy server cert
+  1. openssl req -new -nodes -out server.csr -newkey rsa:4096 -keyout server.key -subj '/C=UK/ST=Cheshire/L=Cheshire/O=Homelab/OU=Cloud/CN=proxy-server'
+  2. openssl x509 -req -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out server.crt -days 365 -sha256 -extfile lab.v3.ext
