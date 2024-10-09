@@ -21,4 +21,5 @@ mirror:
   - name: registry.redhat.io/openshift4/ose-cli:latest
   - name: registry.redhat.io/openshift4/ose-deployer:latest
   - name: registry.redhat.io/rhel8/support-tools:latest
+  - name: registry.redhat.io/rhel9/support-tools:latest
   helm: {}

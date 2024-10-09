@@ -5,7 +5,7 @@ metadata:
 spec:
   httpProxy: http://utility.cloud.lab:3128
   httpsProxy: https://utility.cloud.lab:3129
-  noProxy: example.com
+  noProxy: .ocp.cloud.lab,10.10.0.0/24
   readinessEndpoints:
   - http://www.google.com 
   - https://www.google.com
