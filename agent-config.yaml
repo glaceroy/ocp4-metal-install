@@ -8,13 +8,13 @@ hosts:
     role: master
     interfaces:
       - name: ens18
-        macAddress: BC:24:11:44:45:DB
+        macAddress: BC:24:11:0A:05:09
     networkConfig:
       interfaces:
         - name: ens18
           type: ethernet
           state: up
-          mac-address: BC:24:11:44:45:DB
+          mac-address: BC:24:11:0A:05:09
           ipv4:
             enabled: true
             address:
@@ -35,13 +35,13 @@ hosts:
     role: master
     interfaces:
       - name: ens18
-        macAddress: BC:24:11:A4:9D:59
+        macAddress: BC:24:11:F7:01:ED
     networkConfig:
       interfaces:
         - name: ens18
           type: ethernet
           state: up
-          mac-address: BC:24:11:A4:9D:59
+          mac-address: BC:24:11:F7:01:ED
           ipv4:
             enabled: true
             address:
@@ -62,13 +62,13 @@ hosts:
     role: master
     interfaces:
       - name: ens18
-        macAddress: BC:24:11:8D:C5:DB
+        macAddress: BC:24:11:1A:73:30
     networkConfig:
       interfaces:
         - name: ens18
           type: ethernet
           state: up
-          mac-address: BC:24:11:8D:C5:DB
+          mac-address: BC:24:11:1A:73:30
           ipv4:
             enabled: true
             address:
@@ -89,13 +89,13 @@ hosts:
     role: worker
     interfaces:
       - name: ens18
-        macAddress: BC:24:11:EC:00:D4
+        macAddress: BC:24:11:FC:2C:A8
     networkConfig:
       interfaces:
         - name: ens18
           type: ethernet
           state: up
-          mac-address: BC:24:11:EC:00:D4
+          mac-address: BC:24:11:FC:2C:A8
           ipv4:
             enabled: true
             address:
@@ -116,13 +116,13 @@ hosts:
     role: worker
     interfaces:
       - name: ens18
-        macAddress: BC:24:11:6A:AA:84
+        macAddress: BC:24:11:F3:59:52
     networkConfig:
       interfaces:
         - name: ens18
           type: ethernet
           state: up
-          mac-address: BC:24:11:6A:AA:84
+          mac-address: BC:24:11:F3:59:52
           ipv4:
             enabled: true
             address:

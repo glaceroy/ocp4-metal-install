@@ -1,5 +1,7 @@
 *** AK Home LAB *** 
 
+utility VM Password - aiyaz123
+proxmox url - 192.168.0.100:8006 (or) proxmox.cloud.lab:8006
 proxmox password - aiyaz123
 IP CIDR - 192.168.0.100/24
 Gateway - 192.168.0.101
@@ -14,13 +16,13 @@ DNS - 8.8.8.8
 1 NAT Gateway, haproxy, firewalld, apache, nfs, DNS, DHCP, Mirror Registry Server
 
 MAC Addresses
-master01.ocp.cloud.lab  - BC:24:11:44:45:DB
-master02.ocp.cloud.lab  - BC:24:11:A4:9D:59
-master03.ocp.cloud.lab  - BC:24:11:8D:C5:DB
-worker01.ocp.cloud.lab  - BC:24:11:EC:00:D4
-worker02.ocp.cloud.lab  - BC:24:11:6A:AA:84
-bootstrap.ocp.cloud.lab - BC:24:11:8D:D7:E1
-utility.ocp.cloud.lab - 92.168.0.47
+master01.ocp.cloud.lab  - BC:24:11:0A:05:09
+master02.ocp.cloud.lab  - BC:24:11:F7:01:ED
+master03.ocp.cloud.lab  - BC:24:11:1A:73:30
+worker01.ocp.cloud.lab  - BC:24:11:FC:2C:A8
+worker02.ocp.cloud.lab  - BC:24:11:F3:59:52
+bootstrap.ocp.cloud.lab - BC:24:11:2B:FA:EA
+utility.ocp.cloud.lab - 192.168.0.47
 
 *** Commands to be run to generate manifests and ignition config ***
 
