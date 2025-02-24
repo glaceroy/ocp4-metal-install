@@ -24,7 +24,11 @@ worker02.ocp.cloud.lab  - BC:24:11:F3:59:52
 bootstrap.ocp.cloud.lab - BC:24:11:2B:FA:EA
 utility.ocp.cloud.lab - 192.168.0.47
 
+*** Using Full Control installer from redhat ***
+
 *** Commands to be run to generate manifests and ignition config ***
+
+The agent-config.yaml and install-config.yaml files need to be in the --dir ~/ocp4-install/
 
 ./openshift-install create manifests --dir ~/ocp4-install/
 ./openshift-install create ignition-configs --dir ~/ocp4-install/
