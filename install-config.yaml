@@ -22,7 +22,7 @@ networking:
 platform:
   none: {}
 fips: false
-imageDigestSources:
+imageContentSources:
 - mirrors:
   - utility.cloud.lab:8443/openshift/release-images
   source: quay.io/openshift-release-dev/ocp-release
