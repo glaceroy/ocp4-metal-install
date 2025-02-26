@@ -30,8 +30,8 @@ utility.ocp.cloud.lab - 192.168.0.47
 
 The agent-config.yaml and install-config.yaml files need to be in the --dir ~/ocp4-install/
 
-./openshift-install create manifests --dir ~/ocp4-install/
-./openshift-install create ignition-configs --dir ~/ocp4-install/
+openshift-install create manifests --dir ~/ocp4-install/
+openshift-install create ignition-configs --dir ~/ocp4-install/
 
 
 *** Commands to be run on the bootstrap, master and worker nodes during bootup ***
