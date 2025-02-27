@@ -71,11 +71,9 @@ ARCHITECTURE="x86_64"
 
 https://docs.openshift.com/container-platform/4.16/installing/disconnected_install/installing-mirroring-installation-images.html#installing-mirroring-installation-images
 
-INFO[2024-10-03 13:21:17] Quay installed successfully, config data is stored in /root/ocpmirror 
-INFO[2024-10-03 13:21:17] Quay is available at https://utility.cloud.lab:8443 with credentials (init, qn40vUSeA5BMT9mCDs21Rcb38G7NHkE6)
+INFO[2025-02-27 15:40:31] Quay installed successfully, config data is stored in /root/ocpmirror 
+INFO[2025-02-27 15:40:31] Quay is available at https://utility.cloud.lab:8443 with credentials (init, EG2ku1rT46a79N5C0YjsHpz3Aq8IiwWZ)
 
-aW5pdDpxbjQwdlVTZUE1Qk1UOW1DRHMyMVJjYjM4RzdOSGtFNg==
-  
 stats: shared=1213 unique=13885 size=676GiB ratio=0.90
 
 oc adm release mirror -a ${LOCAL_SECRET_JSON} --from=quay.io/${PRODUCT_REPO}/${RELEASE_NAME}:${OCP_RELEASE}-${ARCHITECTURE} --to=${LOCAL_REGISTRY}/${LOCAL_REPOSITORY} --to-release-image=${LOCAL_REGISTRY}/${LOCAL_REPOSITORY}:${OCP_RELEASE}-${ARCHITECTURE} --insecure-skip-tls-verify=true
@@ -83,8 +81,8 @@ oc adm release mirror -a ${LOCAL_SECRET_JSON} --from=quay.io/${PRODUCT_REPO}/${R
 oc adm release extract -a ${LOCAL_SECRET_JSON} --command=openshift-install "${LOCAL_REGISTRY}/${LOCAL_REPOSITORY}:${OCP_RELEASE}-${ARCHITECTURE}"
 
 Adding mirror registry self-signed certificate to the host - https://access.redhat.com/solutions/6968243
-1. extract cert - openssl s_client -showcerts -connect utility:8443 (2 certs. root and intermediate)
-2. save in - /etc/pki/ca-trust/source/anchors/ca.pem
+1. extract cert - openssl s_client -showcerts -connect utility.cloud.lab:8443 (2 certs. root and intermediate)
+2. append the certs in - /etc/pki/ca-trust/source/anchors/ca.pem
 3. run update-ca-trust extract
 
 To use the new mirrored repository to install, add the following section to the install-config.yaml:
