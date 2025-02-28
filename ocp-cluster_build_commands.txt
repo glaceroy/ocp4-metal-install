@@ -158,3 +158,9 @@ The certs should also be added in install-config.yaml along with the update push
   ItjQV5I2zDQb1FTEF0XnGsWSFoGM5jOZsM876bjOIjq/RgwNfbn4WOQx6pJi7UPY
   FVd2Unfj778X3riQR8hvmtHr0dFTqAlNAm44ahY=
   -----END CERTIFICATE-----
+
+
+Debugging Commands
+
+This commands helps to identify why bootstrap node any issues
+openshift-install gather bootstrap --dir ~/ocp4-install/ --bootstrap 10.10.0.200
