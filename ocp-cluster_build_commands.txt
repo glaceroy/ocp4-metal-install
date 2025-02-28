@@ -44,9 +44,9 @@ openshift-install create ignition-configs --dir ~/ocp4-install/
 
 *** Commands to be run on the bootstrap, master and worker nodes during bootup ***
 
-sudo coreos-installer install /dev/sda --ignition-url http://10.10.0.1:8080/ocp4/bootstrap.ign  --insecure --insecure-ignition
-sudo coreos-installer install /dev/sda --ignition-url http://10.10.0.1:8080/ocp4/master.ign --insecure --insecure-ignition
-sudo coreos-installer install /dev/sda --ignition-url http://10.10.0.1:8080/ocp4/worker.ign --insecure --insecure-ignition
+sudo coreos-installer install /dev/sda --ignition-url http://10.10.0.1:8080/ocp4/bootstrap.ign --insecure-ignition
+sudo coreos-installer install /dev/sda --ignition-url http://10.10.0.1:8080/ocp4/master.ign --insecure-ignition
+sudo coreos-installer install /dev/sda --ignition-url http://10.10.0.1:8080/ocp4/worker.ign --insecure-ignition
 
 
 *** Commands to monitor the cluster build process *** 
@@ -164,3 +164,11 @@ Debugging Commands
 
 This commands helps to identify why bootstrap node any issues
 openshift-install gather bootstrap --dir ~/ocp4-install/ --bootstrap 10.10.0.200
+
+Openshift coreos iso needs to have a specific version of its image avaialble to start the install.
+If the requried image version doesnt exist then the bootstrap node will have the error "Unable to pull openshift image"
+
+The workaround solution is to to find the image sha using the command "openshift-install gather bootstrap --dir ~/ocp4-install/ --bootstrap 10.10.0.200"
+
+Then login to the redhats quay.io registry and search for the image sha to see which version it belongs to and then download that version
+ 
