@@ -71,8 +71,10 @@ ARCHITECTURE="x86_64"
 
 https://docs.openshift.com/container-platform/4.16/in stalling/disconnected_install/installing-mirroring-installation-images.html#installing-mirroring-installation-images
 
-INFO[2025-02-27 15:40:31] Quay installed successfully, config data is stored in /root/ocpmirror 
-INFO[2025-02-27 15:40:31] Quay is available at https://utility.cloud.lab:8443 with credentials (init, EG2ku1rT46a79N5C0YjsHpz3Aq8IiwWZ)
+INFO[2025-03-04 12:46:33] Quay installed successfully, config data is stored in /root/ocpmirror 
+INFO[2025-03-04 12:46:33] Quay is available at https://utility.cloud.lab:8443 with credentials (init, n4RHUVqQ9v1M5L6c72mx0PGFdbtS38fl)
+
+aW5pdDpuNFJIVVZxUTl2MU01TDZjNzJteDBQR0ZkYnRTMzhmbA==
 
 stats: shared=1213 unique=13885 size=676GiB ratio=0.90
 
