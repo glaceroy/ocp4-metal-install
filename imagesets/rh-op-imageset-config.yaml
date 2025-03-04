@@ -6,9 +6,9 @@ storageConfig:
     skipTLS: false
 mirror:                      # This parameter will be useful when updating the cluster in disconnected setup with OSUS operator
   operators:
-  - catalog: registry.redhat.io/redhat/redhat-operator-index:v4.16 # Version of the operators catalog to be mirrored. 
+  - catalog: registry.redhat.io/redhat/redhat-operator-index:v4.14 # Version of the operators catalog to be mirrored. 
     targetName: 'redhat-operator-index'
-    targetTag: 'v4.16..1'
+    targetTag: 'v4.14.1'
     packages:
     - name: cluster-logging
       channels:
@@ -22,10 +22,6 @@ mirror:                      # This parameter will be useful when updating the c
       channels:
       - name: stable
         minVersion: '1.89.1'
-    - name: local-storage-operator
-      channels:
-      - name: stable
-        minVersion: '4.16.0-202407190036'
     - name: openshift-gitops-operator
       channels:
       - name: latest
