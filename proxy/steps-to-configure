@@ -21,3 +21,159 @@ create lab root ca
 create proxy server cert
   1. openssl req -new -nodes -out server.csr -newkey rsa:4096 -keyout server.key -subj '/C=UK/ST=Cheshire/L=Cheshire/O=Homelab/OU=Cloud/CN=proxy-server'
   2. openssl x509 -req -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out server.crt -days 365 -sha256 -extfile lab.v3.ext
+
+
+
+======================
+Existing squid config
+
+[root@utility ssl_cert]# pwd
+/etc/squid/ssl_cert
+[root@utility ssl_cert]# cat myCA.pem 
+-----BEGIN PRIVATE KEY-----
+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
+Ni/CmB3rTpRJRgfoqno/tDbI3tz2
+-----END PRIVATE KEY-----
+-----BEGIN CERTIFICATE-----
+MIIF5zCCA8+gAwIBAgIUURUpF9+zpx1zQNXiw25zmMkxs3wwDQYJKoZIhvcNAQEL
+BQAwbzELMAkGA1UEBhMCVUsxETAPBgNVBAgMCENoZXNoaXJlMREwDwYDVQQHDAhD
+aGVzaGlyZTEQMA4GA1UECgwHSG9tZWxhYjEOMAwGA1UECwwFQ2xvdWQxGDAWBgNV
+BAMMD0hvbWVsYWIgUm9vdCBDQTAeFw0yNDEwMDgxMjE5MTBaFw0yNTEwMDgxMjE5
+MTBaMGwxCzAJBgNVBAYTAlVLMREwDwYDVQQIDAhDaGVzaGlyZTERMA8GA1UEBwwI
+Q2hlc2hpcmUxEDAOBgNVBAoMB0hvbWVsYWIxDjAMBgNVBAsMBUNsb3VkMRUwEwYD
+VQQDDAxwcm94eS1zZXJ2ZXIwggIiMA0GCSqGSIb3DQEBAQUAA4ICDwAwggIKAoIC
+AQCccAZyq7j8V3We7rTAzKLamTFQugruYqlfR0D3DHOwikrNnAnzvukDwwpZHkmC
+g6Y8w8vtaB5L0ano8UJyvG96mLnsK3jhEDzn2QVz55m27J+qC3lGKNYvP4csbvhl
+us6qb21s+PJNvSfDv0xWoRWdzmP8NenDLvjd5W5h3iuIyWo9+9UMh4aNx3vCBuec
+EmQMVhj9OgFSO/8T7qompFGanWLFpMDBWzZNNgHTyGRCi0TWGX8+1KT+PLyIoXEe
+E080PnEHXN6hNBRRypxSoll62I/sDIs+1X9hmIYbXD737ayVVwBmse8IVJt4B+FO
+TRvgejHmf/SmCIFVzISSrFsh8MNHGMJcD10Plmr2Qg7f3kKHK0bJ0wZXxofdFscx
+KioKekgGwKodZTBPa/d8SgTlmJI0Vz02F7hRDXZmCT2aFyeDak8Ii1PnZURQb7Nq
+lP00YIB3fLTVFq/7dV3aDpgcnBfaaut5BW2skUUxlkn9K1C0PT+UrPn/wa2QQzxt
+OzeEkskGM7EWTR6RAiCz9Xcd6RBHAYfY2+ALW5o761IEaOZQ+7U9jX3F354bP9qk
+J9R8aug3Orrbk7KEDG1vm8OJ9M6fAyaWlf9m9DhA4ehgOmca6NrH06heNitBSQG9
+/dSUqUBxQtPwNGsXUa5dSvV6ftXOZSoLz/5LtnVlk8XNDQIDAQABo34wfDAfBgNV
+HSMEGDAWgBQxiIv/p1UmKmhFma4bMUKe0YV/aDAJBgNVHRMEAjAAMAsGA1UdDwQE
+AwIE8DAiBgNVHREEGzAZghF1dGlsaXR5LmNsb3VkLmxhYocECgoAATAdBgNVHQ4E
+FgQUitmGr4O8YUcCEobtp58C5mGJbMwwDQYJKoZIhvcNAQELBQADggIBAA1S8Jso
+/d5tQQcGUNYeWA6IH/IVpNpANK1TfyBnm8F24dRhfAN2UqB8a2IVGDAzBEXQEHiK
+2o96wJcjxMMurQMVsz5NgGrfslfoQgPKACb3hbTHD4AKO9ZCeQlpr79dseyHHwuY
+2fhL0YG2IBZknXdnObYHeibX0N/IEKqLDZlsfrI0X3K4EjFv94uPjXDvYUiUHP7z
+AZ78XdGbpAYxfKetSrvQ7lLwEPCNds+6yJ2VwV80m0fIkUzXf+uAHAVSmlLcrdk3
+6lXAod9fGNOTw9qZDxga3UKDB/K/CZuir8MbODJrPi7xYIhNz7800DmwL6otgotD
+EM5h32gcGR/Io2ci6f98aGMwR+PZ9vkhTH/4n451B/nxpdArHayPYCL1Mwb6nw8Z
+e4vQ+kKd6sU2ShbRwQPP/4ysUJq8WvAH6EN2alkBx8Pk6zx3LHcbrlhM9GpZx9Sj
++SeMjbzGjAC3RwkFvKplHtyY0Ia/vIrH2Qtk/fm+mN6NRl1n/bVE4nyacjU48Svi
+dq4bu0RB6GUaVe/Y/FMgcYwrX/ZfTyqHXmHOJynZG8LD1rPWJlxFUdd3VKRbxhBf
+vQVkOWSzHQJig7dxCNTa0hHMqaYyDQuoH4LcQO4D9wUUQ2cslthLpoPLaNO5ex7W
+TLZ4xdX/E55DgU+7tnQF/S2VvHNoaE2vRtzf
+-----END CERTIFICATE-----
+
+===============================
+
+[root@utility squid]# pwd
+/etc/squid
+[root@utility squid]# cat squid.conf
+#
+# Recommended minimum configuration:
+#
+
+# Example rule allowing access from your local networks.
+# Adapt to list your (internal) IP networks from where browsing
+# should be allowed
+acl localnet src 0.0.0.1-0.255.255.255	# RFC 1122 "this" network (LAN)
+acl localnet src 10.0.0.0/8		# RFC 1918 local private network (LAN)
+acl localnet src 100.64.0.0/10		# RFC 6598 shared address space (CGN)
+acl localnet src 169.254.0.0/16 	# RFC 3927 link-local (directly plugged) machines
+acl localnet src 172.16.0.0/12		# RFC 1918 local private network (LAN)
+acl localnet src 192.168.0.0/16		# RFC 1918 local private network (LAN)
+acl localnet src fc00::/7       	# RFC 4193 local private network range
+acl localnet src fe80::/10      	# RFC 4291 link-local (directly plugged) machines
+
+acl SSL_ports port 8443
+acl SSL_ports port 443
+acl Safe_ports port 80		# http
+acl Safe_ports port 21		# ftp
+acl Safe_ports port 443		# https
+acl Safe_ports port 70		# gopher
+acl Safe_ports port 210		# wais
+acl Safe_ports port 1025-65535	# unregistered ports
+acl Safe_ports port 280		# http-mgmt
+acl Safe_ports port 488		# gss-http
+acl Safe_ports port 591		# filemaker
+acl Safe_ports port 777		# multiling http
+acl CONNECT method CONNECT
+#
+http_access deny !Safe_ports
+http_access deny CONNECT !SSL_ports
+http_access allow localhost manager
+http_access deny manager
+http_access allow localnet
+http_access allow localhost
+http_access deny all
+http_port 3128 ssl-bump cert=/etc/squid/ssl_cert/myCA.pem generate-host-certificates=off dynamic_cert_mem_cache_size=16MB
+https_port 3129 cert=/etc/squid/ssl_cert/myCA.pem generate-host-certificates=off dynamic_cert_mem_cache_size=16MB
+sslcrtd_program /usr/lib64/squid/security_file_certgen -s /var/spool/squid/ssl_db -M 20MB
+#sslcrtd_children 5
+#ssl_bump server-first all
+#sslproxy_cert_error allow all
+#sslproxy_flags DONT_VERIFY_PEER
+acl domain_blacklist dstdomain "/etc/squid/domain_blacklist.txt"
+http_access deny all domain_blacklist
+acl step1 at_step SslBump1
+ssl_bump peek step1
+ssl_bump bump all
+ssl_bump splice all
+coredump_dir /var/spool/squid
+
+refresh_pattern ^ftp:		1440	20%	10080
+refresh_pattern -i (/cgi-bin/|\?) 0	0%	0
+refresh_pattern .		0	20%	4320
