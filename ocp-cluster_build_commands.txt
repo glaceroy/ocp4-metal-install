@@ -176,7 +176,7 @@ Then login to the redhats quay.io registry and search for the image sha to see w
  
 *****************************************
 
-Problems creating cluster
+Problems and Info while creating cluster
 -------------------------
 1. Make sure the openshift-installer version and coreos iso version and the required release image in the mirror registry match. if there is a mismatch then the bootstrap node will have the error "unable to pull the openshift release image"
 Need to check the image sha its trying to pull and search for that sha in the redhat quay.io registry and find the openshift version.
@@ -184,3 +184,5 @@ Need to check the image sha its trying to pull and search for that sha in the re
 2. Bootstrap and master nodes dont get the hostname assigned. It starts as localhost. Need to investigate further 
 
 3. login to these nodes and via ssha and run - sudo hostnamectl set-hostname <hostname> and reboot. This needs to be done asap in the bootstrap node before it starts any containers. 
+
+4. If the worker nodes are added before bootstrap process is completed then they automatically get added to the cluster. If worker node is added after bootstrap process is completed then node bootstrap CSR needs to be approved for the node to join the Cluster
