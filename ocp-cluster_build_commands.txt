@@ -36,7 +36,7 @@ https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/4.16.19/
 
 *** Commands to be run to generate manifests and ignition config ***
 
-The agent-config.yaml and install-config.yaml files need to be in the --dir ~/ocp4-install/
+The agent-config.yaml and install-config.yaml files need to be in the --dir ~/ocp-install/
 
 openshift-install create manifests --dir ~/ocp-install/
 openshift-install create ignition-configs --dir ~/ocp-install/
