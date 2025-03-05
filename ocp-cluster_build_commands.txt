@@ -7,6 +7,9 @@ IP CIDR - 192.168.0.100/24
 Gateway - 192.168.0.101
 DNS - 8.8.8.8
 
+Memory  - 16GB
+CPU     - 4 cores
+Storage - 50 GB
 
 *** OCP Cluster ***
 
