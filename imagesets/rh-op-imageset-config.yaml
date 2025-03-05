@@ -10,14 +10,6 @@ mirror:                      # This parameter will be useful when updating the c
     targetName: 'redhat-operator-index'
     targetTag: 'v4.14.1'
     packages:
-    - name: cluster-logging
-      channels:
-      - name: stable
-        minVersion: '5.9.4'
-    - name: loki-operator
-      channels:
-      - name: stable
-        minVersion: '5.9.4'
     - name: kiali-ossm
       channels:
       - name: stable
@@ -34,14 +26,6 @@ mirror:                      # This parameter will be useful when updating the c
       channels:
       - name: stable
         minVersion: '2.6.1'
-    - name: redhat-oadp-operator
-      channels:
-      - name: stable-1.4
-        minVersion: '1.4.0'
-    - name: odf-operator
-      channels:
-      - name: stable-4.16
-        minVersion: '4.16.0-rhodf'
   additionalImages:
   - name: registry.redhat.io/openshift-service-mesh/istio-must-gather-rhel8:2.6.0-7
   helm: {}
