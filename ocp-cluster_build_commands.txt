@@ -38,8 +38,8 @@ https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/4.16.19/
 
 The agent-config.yaml and install-config.yaml files need to be in the --dir ~/ocp4-install/
 
-openshift-install create manifests --dir ~/ocp4-install/
-openshift-install create ignition-configs --dir ~/ocp4-install/
+openshift-install create manifests --dir ~/ocp-install/
+openshift-install create ignition-configs --dir ~/ocp-install/
 
 
 *** Commands to be run on the bootstrap, master and worker nodes during bootup ***
@@ -51,10 +51,10 @@ sudo coreos-installer install /dev/sda --ignition-url http://10.10.0.1:8080/ocp4
 
 *** Commands to monitor the cluster build process *** 
 
-openshift-install gather bootstrap --dir ~/ocp4-install/ --bootstrap 10.10.0.200 --master 10.10.0.201 --master 10.10.0.202 --master 10.10.0.203
-openshift-install wait-for bootstrap-complete --dir ~/ocp4-install/ --log-level=debug
-openshift-install wait-for install-complete --dir ~/ocp4-install/ --log-level=debug
-openshift-install create cluster --dir ~/ocp4-install/ --log-level debug 
+openshift-install gather bootstrap --dir ~/ocp-install/ --bootstrap 10.10.0.200 --master 10.10.0.201 --master 10.10.0.202 --master 10.10.0.203
+openshift-install wait-for bootstrap-complete --dir ~/ocp-install/ --log-level=debug
+openshift-install wait-for install-complete --dir ~/ocp-install/ --log-level=debug
+openshift-install create cluster --dir ~/ocp-install/ --log-level debug 
 
 
 https://www.redhat.com/en/blog/red-hat-openshift-disconnected-installations
@@ -174,5 +174,13 @@ The workaround solution is to to find the image sha using the command "openshift
 
 Then login to the redhats quay.io registry and search for the image sha to see which version it belongs to and then download that version
  
+*****************************************
+
 Problems creating cluster
-1. Bootstrap node doesnt get the hostname assigned. It starts as localhost. Need to investigate further 
+-------------------------
+1. Make sure the openshift-installer version and coreos iso version and the required release image in the mirror registry match. if there is a mismatch then the bootstrap node will have the error "unable to pull the openshift release image"
+Need to check the image sha its trying to pull and search for that sha in the redhat quay.io registry and find the openshift version.
+
+2. Bootstrap and master nodes dont get the hostname assigned. It starts as localhost. Need to investigate further 
+
+3. login to these nodes and via ssha and run - sudo hostnamectl set-hostname <hostname> and reboot. This needs to be done asap in the bootstrap node before it starts any containers. 
