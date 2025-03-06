@@ -192,3 +192,13 @@ Need to check the image sha its trying to pull and search for that sha in the re
 
 5. Disable insignts operator - https://docs.openshift.com/container-platform/4.14/support/remote_health_monitoring/opting-out-of-remote-health-reporting.html
 oc create secret generic pull-secret --from-file=.dockerconfigjson=.dockerconfigjson --type=kubernetes.io/dockerconfigjson
+
+6. To list the operator channels, version and package names use below commands
+
+oc-mirror list operators --catalog=registry.redhat.io/redhat/redhat-operator-index:v4.14 --package=openshift-pipelines-operator-rh --channel=pipelines-1.15
+
+Lists all operators and the default channels
+oc-mirror list operators --catalog=registry.redhat.io/redhat/redhat-operator-index:v4.14
+
+List all catalogs for the version
+oc mirror list operators --catalogs --version=4.13

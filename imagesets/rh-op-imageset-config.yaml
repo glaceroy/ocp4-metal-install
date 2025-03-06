@@ -13,19 +13,19 @@ mirror:                      # This parameter will be useful when updating the c
     - name: kiali-ossm
       channels:
       - name: stable
-        minVersion: '1.73.8'
+        minVersion: '1.73.4'
     - name: openshift-gitops-operator
       channels:
       - name: latest
         minVersion: '1.12.0'
     - name: openshift-pipelines-operator-rh
       channels:
-      - name: latest
+      - name: pipelines-1.15
         minVersion: '1.15.1'
     - name: servicemeshoperator
       channels:
       - name: stable
-        minVersion: '2.6.1'
+        minVersion: '2.5.2-0'
   additionalImages:
   - name: registry.redhat.io/openshift-service-mesh/istio-must-gather-rhel8:2.6.0-7
   helm: {}
