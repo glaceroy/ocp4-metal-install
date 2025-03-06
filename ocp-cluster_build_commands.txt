@@ -189,3 +189,6 @@ Need to check the image sha its trying to pull and search for that sha in the re
 3. login to these nodes and via ssha and run - sudo hostnamectl set-hostname <hostname> and reboot. This needs to be done asap in the bootstrap node before it starts any containers. 
 
 4. If the worker nodes are added before bootstrap process is completed then they automatically get added to the cluster. If worker node is added after bootstrap process is completed then node bootstrap CSR needs to be approved for the node to join the Cluster
+
+5. Disable insignts operator - https://docs.openshift.com/container-platform/4.14/support/remote_health_monitoring/opting-out-of-remote-health-reporting.html
+oc create secret generic pull-secret --from-file=.dockerconfigjson=.dockerconfigjson --type=kubernetes.io/dockerconfigjson
