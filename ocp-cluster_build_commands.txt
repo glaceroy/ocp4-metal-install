@@ -190,8 +190,9 @@ Need to check the image sha its trying to pull and search for that sha in the re
 
 4. If the worker nodes are added before bootstrap process is completed then they automatically get added to the cluster. If worker node is added after bootstrap process is completed then node bootstrap CSR needs to be approved for the node to join the Cluster
 
-5. Disable insignts operator - https://docs.openshift.com/container-platform/4.14/support/remote_health_monitoring/opting-out-of-remote-health-reporting.html
-oc create secret generic pull-secret --from-file=.dockerconfigjson=.dockerconfigjson --type=kubernetes.io/dockerconfigjson
+5. Disable insignts operator - https://docs.openshift.com/container-platform/4.14/support/remote_health_monitoring/opting-out-of-remote-health-reporting.html#images-update-global-pull-secret_opting-out-remote-health-reporting
+oc get secret/pull-secret -n openshift-config --template='{{index .data ".dockerconfigjson" | base64decode}}' ><pull_secret_location> 
+oc set data secret/pull-secret -n openshift-config --from-file=.dockerconfigjson=<pull_secret_location> 
 
 6. To list the operator channels, version and package names use below commands
 
@@ -202,3 +203,8 @@ oc-mirror list operators --catalog=registry.redhat.io/redhat/redhat-operator-ind
 
 List all catalogs for the version
 oc mirror list operators --catalogs --version=4.13
+
+
+oc login https://api.ocp.cloud.lab:6443 --certificate-authority=ca.crt -u kubeadmin -p J5wpq-MmyCq-B86Dn-dVkj5
+
+oc mirror --config= <imageset-config.yaml> file:<dir> --source-skip-tls --source-use-http
