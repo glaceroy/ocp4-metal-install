@@ -4,5 +4,7 @@ metadata:
   name: cs-redhat-operator-index
   namespace: openshift-marketplace
 spec:
+  displayName: Red Hat Operators
+  publisher: Red Hat
   image: utility.cloud.lab:8443/redhat/redhat-operator-index:v4.14
   sourceType: grpc
