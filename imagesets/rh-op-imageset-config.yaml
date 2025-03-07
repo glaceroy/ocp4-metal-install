@@ -8,7 +8,7 @@ mirror:                      # This parameter will be useful when updating the c
   operators:
   - catalog: registry.redhat.io/redhat/redhat-operator-index:v4.14 # Version of the operators catalog to be mirrored. 
     targetName: 'redhat-operator-index'
-    targetTag: 'v4.14.6'
+    targetTag: 'v4.14.34'
     packages:
     - name: kiali-ossm
       channels:
