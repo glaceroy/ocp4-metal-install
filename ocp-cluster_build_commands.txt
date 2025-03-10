@@ -204,7 +204,6 @@ oc-mirror list operators --catalog=registry.redhat.io/redhat/redhat-operator-ind
 List all catalogs for the version
 oc mirror list operators --catalogs --version=4.13
 
+7. Disable all default operator resources
 
-oc login https://api.ocp.cloud.lab:6443 --certificate-authority=ca.crt -u kubeadmin -p J5wpq-MmyCq-B86Dn-dVkj5
-
-oc mirror --config= <imageset-config.yaml> file:<dir> --source-skip-tls --source-use-http
+https://docs.openshift.com/container-platform/4.17/disconnected/using-olm.html#:~:text=Disabling%20the%20default%20OperatorHub%20catalog%20sources&text=Alternatively%2C%20you%20can%20use%20the,disable%2C%20and%20enable%20individual%20sources.

@@ -1,0 +1,2 @@
+.google.com      # standard external website for health check
+.github.com      # gitops need github access
