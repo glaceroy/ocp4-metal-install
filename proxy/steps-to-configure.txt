@@ -3,6 +3,9 @@ configure as per the conf file
 add the proxy server cert in /etc/squid/ssl_certs
 add the ca in user-ca-bundle and include in proxy config
 
+** Make sure the squid port 3128/3129 (if using https) is opened by firewall **
+firewall-cmd --add-port=3128/tcp --zone=internal --permanent
+
 https://elatov.github.io/2019/01/using-squid-to-proxy-ssl-sites/
 
 lab.v3.ext 
