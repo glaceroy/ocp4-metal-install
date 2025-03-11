@@ -202,7 +202,7 @@ Lists all operators and the default channels
 oc-mirror list operators --catalog=registry.redhat.io/redhat/redhat-operator-index:v4.14
 
 List all catalogs for the version
-oc mirror list operators --catalogs --version=4.13
+oc mirror list operators --catalogs --version=4.14
 
 7. Disable all default operator resources
 
