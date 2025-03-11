@@ -1,0 +1,58 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: istio-system
+  annotations:
+    openshift.io/node-selector : node-role.kubernetes.io/infra=
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: openshift-kiali
+  annotations:
+    openshift.io/node-selector : node-role.kubernetes.io/infra=
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: openshift-servicemesh
+---
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: kiali-operator
+  namespace: openshift-kiali
+---
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: servicemesh-operator
+  namespace: openshift-servicemesh
+---
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  labels:
+    operators.coreos.com/servicemesh-operator.openshift-operators: ""
+  name: kiali-ossm
+  namespace: openshift-kiali
+spec:
+  channel: stable
+  installPlanApproval: Automatic
+  name: kiali-ossm
+  source: cs-redhat-operator-index
+  sourceNamespace: openshift-marketplace
+---
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  labels:
+    operators.coreos.com/servicemesh-operator.openshift-operators: ""
+  name: servicemesh-operator
+  namespace: openshift-servicemesh
+spec:
+  channel: stable
+  installPlanApproval: Automatic
+  name: servicemesh-operator
+  source: cs-redhat-operator-index
+  sourceNamespace: openshift-marketplace 
