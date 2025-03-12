@@ -50,8 +50,8 @@ apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
   labels:
-    operators.coreos.com/servicemesh-operator.openshift-operators: ""
-  name: servicemesh-operator
+    operators.coreos.com/servicemeshoperator.openshift-operators: ""
+  name: servicemeshoperator
   namespace: openshift-servicemesh
 spec:
   channel: stable
@@ -59,6 +59,7 @@ spec:
   name: servicemesh-operator
   source: cs-redhat-operator-index
   sourceNamespace: openshift-marketplace 
+  startingCSV: servicemeshoperator.v2.5.2
 #  config:
 #    nodeSelector:
 #      node-role.kubernetes.io/infra: ''
