@@ -12,7 +12,7 @@ metadata:
 spec:
   addons:
     grafana:
-      enabled: true
+      enabled: false
     jaeger:
       install:
         storage:
@@ -20,7 +20,7 @@ spec:
     kiali:
       enabled: true
     prometheus:
-      enabled: true
+      enabled: false
   gateways:
     additionalEgress:
       eg0001:
