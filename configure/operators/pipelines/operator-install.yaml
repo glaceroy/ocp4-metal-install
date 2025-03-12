@@ -8,7 +8,7 @@ metadata:
 apiVersion: operators.coreos.com/v1
 kind: OperatorGroup
 metadata:
-  name: openshift-pipelines-operator
+  name: pipelines-operator
   namespace: openshift-pipelines-operator
 ---
 apiVersion: operators.coreos.com/v1alpha1
@@ -19,9 +19,10 @@ metadata:
 spec:
   channel: latest
   installPlanApproval: Automatic
-  name: openshift-pipelines-operator
+  name: openshift-pipelines-operator-rh
   source: cs-redhat-operator-index
   sourceNamespace: openshift-marketplace
+  startingCSV: openshift-pipelines-operator-rh.v1.15.1
 #  config:
 #    nodeSelector:
 #      node-role.kubernetes.io/infra: ''
