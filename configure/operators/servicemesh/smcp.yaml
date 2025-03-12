@@ -1,0 +1,228 @@
+apiVersion: maistra.io/v2
+kind: ServiceMeshControlPlane
+metadata:
+  creationTimestamp: "2025-03-12T16:45:39Z"
+  finalizers:
+  - maistra.io/istio-operator
+  generation: 1
+  name: app-mesh-01
+  namespace: istio-system
+  resourceVersion: "3266705"
+  uid: bdcfd694-2498-4f1b-b5b8-591907b71ed7
+spec:
+  addons:
+    grafana:
+      enabled: true
+    jaeger:
+      install:
+        storage:
+          type: Memory
+    kiali:
+      enabled: true
+    prometheus:
+      enabled: true
+  gateways:
+    openshiftRoute:
+      enabled: false
+  mode: MultiTenant
+  policy:
+    type: Istiod
+  profiles:
+  - default
+  telemetry:
+    type: Istiod
+  tracing:
+    sampling: 10000
+    type: Jaeger
+  version: v2.5
+status:
+  annotations:
+    alwaysReadyComponents: ""
+    readyComponentCount: 0/0
+  appliedSpec: {}
+  appliedValues:
+    istio:
+      gateways:
+        enabled: true
+        istio-egressgateway:
+          autoscaleEnabled: false
+          enabled: true
+          gatewayType: egress
+          name: istio-egressgateway
+          resources:
+            requests:
+              cpu: 10m
+              memory: 128Mi
+        istio-ingressgateway:
+          autoscaleEnabled: false
+          enabled: true
+          gatewayType: ingress
+          ior_enabled: false
+          name: istio-ingressgateway
+          resources:
+            requests:
+              cpu: 10m
+              memory: 128Mi
+          type: ClusterIP
+      global:
+        configNamespace: istio-system
+        configRootNamespace: istio-system
+        defaultPodDisruptionBudget:
+          enabled: false
+        defaultResources:
+          requests:
+            cpu: 10m
+            memory: 128Mi
+        enableTracing: true
+        hub: registry.redhat.io/openshift-service-mesh
+        istioNamespace: istio-system
+        jwtPolicy: first-party-jwt
+        k8sIngress:
+          enableHttps: false
+          enabled: false
+          gatewayName: ingressgateway
+        logging:
+          level: default:warn
+        meshExpansion:
+          enabled: false
+          useILB: false
+        multiCluster:
+          enabled: false
+          multiClusterOverrides:
+            expansionEnabled: null
+            multiClusterEnabled: null
+        oauthproxy:
+          hub: registry.redhat.io/openshift4
+          image: ose-oauth-proxy
+          imagePullPolicy: IfNotPresent
+          tag: v4.9
+        prometheusNamespace: istio-system
+        proxy:
+          autoInject: disabled
+          dnsRefreshRate: 300s
+          image: registry.redhat.io/openshift-service-mesh/proxyv2-rhel8@sha256:c4f08d86c2f17e2b265322d17e626fa1f7eff0074275de0cc48ce651f0602ca7
+          resources:
+            requests:
+              cpu: 10m
+              memory: 128Mi
+          tracer: zipkin
+        proxy_init:
+          image: proxy-init-rhel7
+        tag: 2.5.0
+      grafana:
+        enabled: true
+        image: registry.redhat.io/openshift-service-mesh/grafana-rhel8@sha256:092a366242a34b32ea313c23b68bbbd910983f1cbb21abf25ddc393551c641a3
+        ingress:
+          enabled: true
+        service:
+          annotations:
+            service.alpha.openshift.io/serving-cert-secret-name: grafana-tls
+      istio_cni:
+        enabled: true
+        istio_cni_network: v2-5-istio-cni
+      kiali:
+        dashboard:
+          viewOnlyMode: false
+        enabled: true
+        ingress:
+          enabled: true
+        resourceName: kiali
+      meshConfig:
+        defaultConfig:
+          tracing:
+            zipkin:
+              address: jaeger-collector.istio-system.svc:9411
+        dnsRefreshRate: 300s
+        enableTracing: true
+        ingressControllerMode: "OFF"
+        rootNamespace: istio-system
+      mixer:
+        adapters:
+          prometheus:
+            enabled: true
+        policy:
+          enabled: false
+        telemetry:
+          enabled: false
+      pilot:
+        autoscaleEnabled: false
+        enableProtocolSniffingForInbound: false
+        enableProtocolSniffingForOutbound: false
+        image: registry.redhat.io/openshift-service-mesh/pilot-rhel8@sha256:7eb4be84c8a3d631dfa6e830feb12ab1f5a85f2f34b144e9c3c7fb604b8e3de5
+        resources:
+          requests:
+            cpu: 10m
+            memory: 128Mi
+        traceSampling: 100
+      policy:
+        implementation: Istiod
+      prometheus:
+        enabled: true
+        image: registry.redhat.io/openshift4/ose-prometheus@sha256:59c30a3a9c9c018e5a6c6414062613b067c4767981bcfcc3771a93bd470551ee
+        ingress:
+          enabled: true
+        resources:
+          requests:
+            cpu: 10m
+            memory: 128Mi
+        service:
+          annotations:
+            service.alpha.openshift.io/serving-cert-secret-name: prometheus-tls
+      prometheusConfigReloader:
+        image: registry.redhat.io/openshift4/ose-prometheus-config-reloader@sha256:911ccdcf65a21b585524594f00b10157b40a961b049a658b9d9170055bb2a96e
+      rateLimiting:
+        rls:
+          image: registry.redhat.io/openshift-service-mesh/ratelimit-rhel8@sha256:5d22629dc132fee074264f4a1ed8a46463bede22097362bca7ae7eec97a37d04
+      revision: app-mesh-01
+      sidecarInjectorWebhook:
+        enableNamespacesByDefault: false
+        objectSelector:
+          enabled: false
+      telemetry:
+        enabled: true
+        implementation: Istiod
+        v1:
+          enabled: false
+        v2:
+          enabled: true
+          prometheus:
+            enabled: true
+      tracing:
+        enabled: true
+        ingress:
+          enabled: true
+        jaeger:
+          resourceName: jaeger
+          template: all-in-one
+        provider: jaeger
+    profiles:
+    - default
+    template: default
+    threeScale:
+      hub: registry.redhat.io/openshift-service-mesh
+      image: 3scale-istio-adapter-rhel8
+      tag: 2.0.0
+    version: v2.5
+  conditions:
+  - lastTransitionTime: "2025-03-12T16:45:39Z"
+    message: Installing mesh generation 1
+    reason: ResourceCreated
+    status: "False"
+    type: Installed
+  - lastTransitionTime: "2025-03-12T16:45:39Z"
+    message: 'Dependency "Jaeger CRD" is missing: error: no matches for kind "Jaeger"
+      in version "jaegertracing.io/v1"'
+    reason: DependencyMissingError
+    status: "False"
+    type: Reconciled
+  - lastTransitionTime: "2025-03-12T16:45:39Z"
+    message: 'Dependency "Jaeger CRD" is missing: error: no matches for kind "Jaeger"
+      in version "jaegertracing.io/v1"'
+    reason: DependencyMissingError
+    status: "False"
+    type: Ready
+  readiness:
+    components:
+      pending: []
+      ready: []
+      unready: []
