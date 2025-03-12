@@ -66,6 +66,10 @@ spec:
                 CMDB_AppID: AL12345
     openshiftRoute:
       enabled: false
+    egress:
+      enabled: false
+    ingress: 
+      enabled: false
   mode: MultiTenant
   policy:
     type: Istiod
