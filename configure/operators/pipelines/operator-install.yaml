@@ -17,7 +17,7 @@ metadata:
   name: pipelines-operator
   namespace: openshift-pipelines-operator
 spec:
-  channel: latest
+  channel: pipelines-1.15
   installPlanApproval: Automatic
   name: openshift-pipelines-operator-rh
   source: cs-redhat-operator-index
