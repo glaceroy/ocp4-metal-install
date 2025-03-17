@@ -4,10 +4,8 @@ metadata:
   name: cluster
 spec:
   httpProxy: http://utility.cloud.lab:3128
-  httpsProxy: https://utility.cloud.lab:3129
-  noProxy: .ocp.cloud.lab,10.10.0.0/24
+  httpsProxy: http://utility.cloud.lab:3128
+  noProxy: .cloud.lab,10.10.0.0/24,10.128.0.0/14,172.30.0.0/16
   readinessEndpoints:
-  - http://www.google.com 
+  - http://www.google.com
   - https://www.google.com
-  trustedCA:
-    name: user-ca-bundle

@@ -1,2 +1,3 @@
-.google.com      # standard external website for health check
-.github.com      # gitops need github access
+.google.com       # standard external website for health check
+.github.com       # gitops need github access
+utility.cloud.lab # mirror registry
