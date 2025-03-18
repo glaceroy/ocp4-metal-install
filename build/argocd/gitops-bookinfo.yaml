@@ -1,11 +1,11 @@
 apiVersion: v1
 kind: Secret
 metadata:
-  name: gitops-onboarding
+  name: gitops-bookinfo
   namespace: openshift-gitops
   labels:
     argocd.argoproj.io/secret-type: repository
 stringData:
-  url: https://github.com/glaceroy/gitops-onboarding.git
-  password: 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 
+  url: https://github.com/glaceroy/bookinfo.git
+  password: not-used
   username: not-used

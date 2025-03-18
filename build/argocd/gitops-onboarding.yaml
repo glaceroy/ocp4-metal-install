@@ -7,5 +7,5 @@ metadata:
     argocd.argoproj.io/secret-type: repository
 stringData:
   url: https://github.com/glaceroy/gitops-onboarding.git
-  password: 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 
+  password: not-used
   username: not-used
