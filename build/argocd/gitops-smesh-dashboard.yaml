@@ -7,5 +7,5 @@ metadata:
     argocd.argoproj.io/secret-type: repository
 stringData:
   url: https://github.com/glaceroy/smesh-dashboard.git
-  password: not-used
+  password: ${GITHUB_TOKEN}
   username: not-used
