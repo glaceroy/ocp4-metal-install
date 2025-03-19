@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: bookinfo
+  namespace: openshift-gitops
+  labels:
+    app-type: bookinfo
+spec:
+  destination:
+    namespace: lbg-ocp-bookinfo-003-lab
+    server: https://kubernetes.default.svc
+  project: test-library
+  source:
+    path: production/helm-config/
+    repoURL: https://github.com/glaceroy/bookinfo
+    targetRevision: HEAD
+    helm:
+      version: v3
+      valuesFile:
+        - production/helm-config/values.yaml
+  info:
+    - name: 'Purpose'
+      value: 'Application to test istio use cases'
+  syncPolicy:
+    automated: {}

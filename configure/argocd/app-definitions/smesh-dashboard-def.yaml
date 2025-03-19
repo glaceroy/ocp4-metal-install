@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: smesh-dashboard
+  namespace: openshift-gitops
+  labels:
+    app-type: smesh-dashboard
+spec:
+  destination:
+    namespace: lbg-ocp-smesh-dashboard-004-lab
+    server: https://kubernetes.default.svc
+  project: test-library
+  source:
+    path: helm-config/
+    repoURL: https://github.com/glaceroy/smesh-dashboard
+    targetRevision: HEAD
+    helm:
+      version: v3
+      valuesFile:
+        - helm-config/values.yaml
+  info:
+    - name: 'Purpose'
+      value: 'Dashboard to show smesh connectivity'
+  syncPolicy:
+    automated: {}

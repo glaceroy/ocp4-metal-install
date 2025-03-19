@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: test-library
+  namespace: openshift-gitops
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  clusterResourceWhitelist:
+  - group: '*'
+    kind: '*'
+  description: Project contains applications for test library
+  destinations:
+  - name: bookinfo
+    namespace: lbg-ocp-bookinfo-003-lab
+    server: https://kubernetes.default.svc
+  - name: smesh-dashboard
+    namespace: lbg-ocp-smesh-dashboard-004-lab
+    server: https://kubernetes.default.svc
+  namespaceResourceWhitelist:
+  - group: '*'
+    kind: '*'
+  sourceRepos:
+  - https://github.com/glaceroy/bookinfo
+  - https://github.com/glaceroy/smesh-dashboard 

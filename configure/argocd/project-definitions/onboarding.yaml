@@ -1,0 +1,52 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: onboarding
+  namespace: openshift-gitops
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+  labels:
+    app.kubernetes.io/instance: app-of-apps
+spec:
+  clusterResourceWhitelist:
+  - group: '*'
+    kind: Namespace
+  - group: '*'
+    kind: Project
+  - group: rbac.authorization.k8s.io
+    kind: ClusterRole
+  - group: rbac.authorization.k8s.io
+    kind: ClusterRoleBinding
+  description: Project contains user namespace onboarding
+  destinations:
+  - name: in-cluster
+    namespace: '*'
+    server: https://kubernetes.default.svc
+  namespaceResourceWhitelist:
+  - group: rbac.authorization.k8s.io
+    kind: RoleBinding
+  - group: '*'
+    kind: LimitRange
+  - group: '*'
+    kind: ResourceQuota
+  - group: rbac.authorization.k8s.io
+    kind: Role
+  - group: rbac.authorization.k8s.io
+    kind: Role
+  - group: networking.k8s.io
+    kind: NetworkPolicy
+  - group: '*'
+    kind: Pod
+  - group: monitoring.coreos.com
+    kind: PrometheusRule
+  - group: maistra.io
+    kind: ServiceMeshMemberRoll
+  - group: maistra.io
+    kind: ServiceMeshControlPlane
+  - group: '*'
+    kind: ConfigMap
+  - group: batch
+    kind: Job
+  sourceRepos:
+  - https://github.com/glaceroy/gitops-onboarding.git
+  - https://github.com/glaceroy/gitops-cluster-control.git
