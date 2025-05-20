@@ -213,3 +213,7 @@ oc mirror list operators --catalogs --version=4.14
 7. Disable all default operator resources
 
 https://docs.openshift.com/container-platform/4.17/disconnected/using-olm.html#:~:text=Disabling%20the%20default%20OperatorHub%20catalog%20sources&text=Alternatively%2C%20you%20can%20use%20the,disable%2C%20and%20enable%20individual%20sources.
+
+8 . Configure core cluster monitoring and user monitoring
+
+https://docs.redhat.com/en/documentation/openshift_container_platform/4.14/html/monitoring/configuring-core-platform-monitoring#creating-cluster-monitoring-configmap_preparing-to-configure-the-monitoring-stack

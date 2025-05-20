@@ -1,0 +1,8 @@
+prometheus:
+  retention: 48h
+  volumeClaimTemplate:
+    spec:
+      volumeMode: Filesystem
+      resources:
+        requests:
+          storage: 1Gi
