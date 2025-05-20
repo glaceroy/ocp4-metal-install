@@ -22,6 +22,7 @@ master03.ocp.cloud.lab.   IN      A      10.10.0.203
 worker01.ocp.cloud.lab.   IN      A      10.10.0.211
 worker02.ocp.cloud.lab.   IN      A      10.10.0.212
 worker03.ocp.cloud.lab.   IN      A      10.10.0.213
+worker04.ocp.cloud.lab.   IN      A      10.10.0.214
 
 ; OpenShift Internal - Load balancer
 api.ocp.cloud.lab.        IN    A    10.10.0.1
