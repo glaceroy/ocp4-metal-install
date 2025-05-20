@@ -44,6 +44,12 @@ The agent-config.yaml and install-config.yaml files need to be in the --dir ~/oc
 openshift-install create manifests --dir ~/ocp-install/
 openshift-install create ignition-configs --dir ~/ocp-install/
 
+*** NFS Share ***
+
+echo "/shares/registry 10.10.0.0/24(rw,sync,root_squash,no_subtree_check,no_wdelay)" > /etc/exports
+exportfs -rv
+
+***************
 
 *** Commands to be run on the bootstrap, master and worker nodes during bootup ***
 
