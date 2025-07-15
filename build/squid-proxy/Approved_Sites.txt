@@ -1,4 +1,5 @@
 .google.com                 # standard external website for health check
 .github.com                 # gitops need github access
-raw.githubusercontent.com   #github repo
+raw.githubusercontent.com   # github repo
 utility.cloud.lab           # mirror registry
+.slack.com                  # slack website for alertmanager receiver

@@ -6,3 +6,10 @@
     firewall-cmd --add-port=123/udp --zone=internal --permanent
     firewall-cmd --reload
 4 . create mc for worker and master nodes and apply the yaml
+
+Online material
+
+https://www.youtube.com/watch?v=v8Z3JagfCFY&t=879s
+https://www.redhat.com/en/blog/chrony-time-services-linux
+https://docs.redhat.com/en/documentation/openshift_container_platform/4.16/html/machine_configuration/machine-configs-configure#installation-special-config-chrony_machine-configs-configure
+https://www.youtube.com/watch?v=jxHP0Vycdaw

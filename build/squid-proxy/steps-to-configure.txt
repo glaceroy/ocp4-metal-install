@@ -8,6 +8,15 @@ firewall-cmd --add-port=3128/tcp --zone=internal --permanent
 
 https://elatov.github.io/2019/01/using-squid-to-proxy-ssl-sites/
 
+************************
+export proxy variables before running curl command to test
+without exporting proxy variables the request wont reach proxy server or the access g6Y8w8vtaB5L0ano8UJyvG96mLnsK3jhEDzn2QVz55m27J
+
+export http_proxy=http://utility.cloud.lab:3128
+export https_proxy=http://utility.cloud.lab:3128
+
+************************
+
 lab.v3.ext 
 authorityKeyIdentifier=keyid,issuer
 basicConstraints=CA:FALSE
