@@ -1,0 +1,8 @@
+1. Install chronyd service on the utility VM
+2. Make utility VM as ntp server - chrony.conf
+3. Open firewall so OSE cluster can connect to utility VM on port UDP 123
+    ** Try checking if chrony works without firewall rules first** 
+    firewall-cmd --add-service=ntp --zone=internal --permanent
+    firewall-cmd --add-port=123/udp --zone=internal --permanent
+    firewall-cmd --reload
+4 . create mc for worker and master nodes and apply the yaml

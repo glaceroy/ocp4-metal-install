@@ -85,6 +85,9 @@ INFO[2025-03-04 12:46:33] Quay is available at https://utility.cloud.lab:8443 wi
 
 aW5pdDpuNFJIVVZxUTl2MU01TDZjNzJteDBQR0ZkYnRTMzhmbA==
 
+download images
+oc mirror --config=./rh-op-imageset-config.yaml docker://utility.cloud.lab:8443
+
 stats: shared=1213 unique=13885 size=676GiB ratio=0.90
 
 oc adm release mirror -a ${LOCAL_SECRET_JSON} --from=quay.io/${PRODUCT_REPO}/${RELEASE_NAME}:${OCP_RELEASE}-${ARCHITECTURE} --to=${LOCAL_REGISTRY}/${LOCAL_REPOSITORY} --to-release-image=${LOCAL_REGISTRY}/${LOCAL_REPOSITORY}:${OCP_RELEASE}-${ARCHITECTURE} --insecure-skip-tls-verify=true
