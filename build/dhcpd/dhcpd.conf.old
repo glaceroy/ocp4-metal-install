@@ -1,0 +1,60 @@
+#
+# DHCP Server Configuration file
+#
+
+authoritative;
+ddns-update-style interim;
+allow booting;
+allow bootp;
+allow unknown-clients;
+ignore client-updates;
+default-lease-time 14400;
+max-lease-time 14400;
+
+subnet 10.10.0.0 netmask 255.255.255.0 {
+ option routers                  10.10.0.1; # lan
+ option subnet-mask              255.255.255.0;
+ option domain-name              "cloud.lab";
+ option domain-name-servers       10.10.0.1;
+ range 10.10.0.80 10.10.0.99;
+}
+
+host bootstrap {
+ hardware ethernet BC:24:11:0F:3F:17;
+ fixed-address 10.10.0.200;
+}
+
+host master01 {
+ hardware ethernet BC:24:11:B2:9B:16;
+ fixed-address 10.10.0.201;
+}
+
+host master02 {
+ hardware ethernet BC:24:11:2B:5B:65;
+ fixed-address 10.10.0.202;
+}
+
+host master03 {
+ hardware ethernet BC:24:11:74:7E:18;
+ fixed-address 10.10.0.203;
+}
+
+host worker01 {
+ hardware ethernet BC:24:11:3E:AA:C5;
+ fixed-address 10.10.0.211;
+}
+
+host worker02 {
+ hardware ethernet BC:24:11:D7:17:06;
+ fixed-address 10.10.0.212;
+}
+
+host worker03 {
+ hardware ethernet BC:24:11:2B:93:88;
+ fixed-address 10.10.0.213;
+}
+
+host worker04 {
+ hardware ethernet BC:24:11:87:37:60;
+ fixed-address 10.10.0.214;
+}
