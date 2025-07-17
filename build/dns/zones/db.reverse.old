@@ -1,0 +1,25 @@
+$TTL    604800
+@       IN      SOA     utility.cloud.lab. contact.cloud.lab (
+                  1     ; Serial
+             604800     ; Refresh
+              86400     ; Retry
+            2419200     ; Expire
+             604800     ; Minimum
+)
+
+  IN      NS      utility.cloud.lab.
+
+1      IN    PTR    utility.cloud.lab. 
+1      IN    PTR    api.ocp.cloud.lab.
+1      IN    PTR    api-int.ocp.cloud.lab.
+;
+200    IN    PTR    bootstrap.ocp.cloud.lab.
+;
+201    IN    PTR    master01.ocp.cloud.lab.
+202    IN    PTR    master02.ocp.cloud.lab.
+203    IN    PTR    master03.ocp.cloud.lab.
+;
+211    IN    PTR    worker01.ocp.cloud.lab.
+212    IN    PTR    worker02.ocp.cloud.lab.
+213    IN    PTR    worker03.ocp.cloud.lab.
+214    IN    PTR    worker04.ocp.cloud.lab.
