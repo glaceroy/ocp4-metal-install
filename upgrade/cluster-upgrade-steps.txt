@@ -1,0 +1,5 @@
+1. Download images 
+2. Create release json found in ~/oc-mirror-workspace/results-<number>/release-signatures
+3. change the name of the configmap to something meaningful
+4. oc apply -f <configmap>.json
+5. upgrade the cluster by running - oc adm upgrade --allow-explicit-upgrade --to-image utility.cloud.lab:8443/openshift/release-images@sha256:709a70750bd6b88c32c679fee9459e323e3e0e9d6d3f186f28a46e3010d1cc7d

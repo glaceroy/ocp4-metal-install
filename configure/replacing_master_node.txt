@@ -1,0 +1,60 @@
+References:
+https://access.redhat.com/solutions/6387841
+https://docs.redhat.com/en/documentation/openshift_container_platform/4.14/html/backup_and_restore/control-plane-backup-and-restore#replacing-unhealthy-etcd-member
+https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/nodes/working-with-nodes#nodes-nodes-working
+
+Steps
+1. delete the etcd bad member from the etcd table.
+2. take etcd backup. run the below commands from the healthy master node. (master01.ocp.cloud.lab)
+  a. oc debug --as-root node/master01.ocp.cloud.lab
+  b. chroot /host
+  c. export HTTP_PROXY=http://utility.cloud.lab:3128
+     export HTTPS_PROXY=http://utility.cloud.lab:3128
+     export NO_PROXY=.cloud.lab,10.10.0.0/24,10.128.0.0/14,172.30.0.0/16     
+  d. /usr/local/bin/cluster-backup.sh /home/core/assets/backup
+      Logs:
+      Certificate /etc/kubernetes/static-pod-certs/configmaps/etcd-serving-ca/ca-bundle.crt is missing. Checking in different directory
+      Certificate /etc/kubernetes/static-pod-resources/etcd-certs/configmaps/etcd-serving-ca/ca-bundle.crt found!
+      found latest kube-apiserver: /etc/kubernetes/static-pod-resources/kube-apiserver-pod-43
+      found latest kube-controller-manager: /etc/kubernetes/static-pod-resources/kube-controller-manager-pod-10
+      found latest kube-scheduler: /etc/kubernetes/static-pod-resources/kube-scheduler-pod-10
+      found latest etcd: /etc/kubernetes/static-pod-resources/etcd-pod-8
+      f2f0fb532166d5f1e5e771aacf1050defc4684387f0341b11644a3f7bf9f025d
+      etcdctl version: 3.5.12
+      API version: 3.5
+      {"level":"info","ts":"2025-07-18T13:00:29.471694Z","caller":"snapshot/v3_snapshot.go:65","msg":"created temporary db file","path":"/home/core/assets/backup/snapshot_2025-07-18_130023.db.part"}
+      {"level":"info","ts":"2025-07-18T13:00:29.502666Z","logger":"client","caller":"v3@v3.5.12/maintenance.go:212","msg":"opened snapshot stream; downloading"}
+      {"level":"info","ts":"2025-07-18T13:00:29.50287Z","caller":"snapshot/v3_snapshot.go:73","msg":"fetching snapshot","endpoint":"https://10.10.0.201:2379"}
+      {"level":"info","ts":"2025-07-18T13:00:43.164604Z","logger":"client","caller":"v3@v3.5.12/maintenance.go:220","msg":"completed snapshot read; closing"}
+      {"level":"info","ts":"2025-07-18T13:00:46.764876Z","caller":"snapshot/v3_snapshot.go:88","msg":"fetched snapshot","endpoint":"https://10.10.0.201:2379","size":"173 MB","took":"17 seconds ago"}
+      {"level":"info","ts":"2025-07-18T13:00:46.765196Z","caller":"snapshot/v3_snapshot.go:97","msg":"saved","path":"/home/core/assets/backup/snapshot_2025-07-18_130023.db"}
+      Snapshot saved at /home/core/assets/backup/snapshot_2025-07-18_130023.db
+      {"hash":3974321572,"revision":171408585,"totalKey":17455,"totalSize":172748800}
+      snapshot db and kube resources are successfully saved to /home/core/assets/backup
+      sh-5.1# ls -lrt /home/core/assets/backup/
+      total 168784
+      -rw-------. 1 root root     79983 Jul 18 13:00 static_kuberesources_2025-07-18_130023.tar.gz
+      -rw-------. 1 root root 172748832 Jul 18 13:00 snapshot_2025-07-18_130023.db
+
+2. Remove the unhealthy etcd member from the group. Login to a healthy etcd node/pod
+    a. etcdctl member list -w table
+    b. etcdctl member remove <etcd id>
+2. shut down the VM in proxmox.
+3. Delete the node from the cluster - oc delete node master03.ocp.cloud.lab
+4. remove any referenced secrets
+    a. oc get secrets -n openshift-etcd | grep master03
+    b. oc delete secret <3 secrets>
+5. Rebuild the master node VM in proxmox
+6. Wait for the master node to boot and once ready approve the CSR's
+7. After CSR approved master node is included in the cluster but is in not ready state. Check journactl -xef for updates
+8. Once all ready and up check the etcd quorum 
+    oc get pods -n openshift-etcd | grep -v etcd-quorum-guard | grep etcd
+--------
+sh-5.1# etcdctl member list -w table
++------------------+---------+------------------------+--------------------------+--------------------------+------------+
+|        ID        | STATUS  |          NAME          |        PEER ADDRS        |       CLIENT ADDRS       | IS LEARNER |
++------------------+---------+------------------------+--------------------------+--------------------------+------------+
+|  dff0e6854ba138b | started | master01.ocp.cloud.lab | https://10.10.0.201:2380 | https://10.10.0.201:2379 |      false |
+|  ea78cbf26b0b9c5 | started | master03.ocp.cloud.lab | https://10.10.0.203:2380 | https://10.10.0.203:2379 |      false |
+| 444f8711b7338b79 | started | master02.ocp.cloud.lab | https://10.10.0.202:2380 | https://10.10.0.202:2379 |      false |
++------------------+---------+------------------------+--------------------------+--------------------------+------------+

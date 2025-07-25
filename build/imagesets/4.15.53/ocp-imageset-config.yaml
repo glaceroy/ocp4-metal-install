@@ -1,0 +1,24 @@
+kind: ImageSetConfiguration
+apiVersion: mirror.openshift.io/v1alpha2
+storageConfig:
+  local:
+    path: ./
+mirror:
+  platform:
+    architectures:
+    - "amd64"
+    channels:
+    - name: stable-4.15               # Version of OpenShift to be mirrored
+      minVersion: 4.15.53             # Minimum version of OpenShift to be mirrored
+      maxVersion: 4.15.53             # Maximum version of OpenShift to be mirrored
+      shortestPath: true
+      type: ocp
+    graph: true                       # This parameter will be useful when updating the cluster in disconnected setup with OSUS operator
+  additionalImages:
+  - name: registry.redhat.io/ubi8/ubi:latest
+  - name: registry.redhat.io/ubi9/ubi:latest
+  - name: registry.redhat.io/openshift4/ose-cli:latest
+  - name: registry.redhat.io/openshift4/ose-deployer:latest
+  - name: registry.redhat.io/rhel8/support-tools:latest
+  - name: registry.redhat.io/rhel9/support-tools:latest
+  helm: {}

@@ -66,33 +66,19 @@ openshift-install wait-for install-complete --dir ~/ocp-install/ --log-level=deb
 openshift-install create cluster --dir ~/ocp-install/ --log-level debug 
 
 
-https://www.redhat.com/en/blog/red-hat-openshift-disconnected-installations
-
-*** Mirror Registry commands and setup ***
-
-OCP_RELEASE="4.16.9"
-LOCAL_REGISTRY="utility:8443"
-LOCAL_REPOSITORY="ocp4/openshift4"
-PRODUCT_REPO="openshift-release-dev"
-LOCAL_SECRET_JSON="./pull-secret.json"
-RELEASE_NAME="ocp-release"
-ARCHITECTURE="x86_64"
-
 https://docs.openshift.com/container-platform/4.16/in stalling/disconnected_install/installing-mirroring-installation-images.html#installing-mirroring-installation-images
 
 INFO[2025-03-04 12:46:33] Quay installed successfully, config data is stored in /root/ocpmirror 
 INFO[2025-03-04 12:46:33] Quay is available at https://utility.cloud.lab:8443 with credentials (init, n4RHUVqQ9v1M5L6c72mx0PGFdbtS38fl)
 
-aW5pdDpuNFJIVVZxUTl2MU01TDZjNzJteDBQR0ZkYnRTMzhmbA==
+download images to tar file and then do an upload (RECOMMENDED as it works)
+  oc mirror --config=./ocp-imageset-config.yaml file://ose-4.15-images
+  oc mirror --from=./ose-4.15-images/mirror_seq3_000000.tar docker://utility.cloud.lab:8443
 
-download images
-oc mirror --config=./rh-op-imageset-config.yaml docker://utility.cloud.lab:8443
+or download directly to the mirror registry
+  oc mirror --config=./rh-op-imageset-config.yaml docker://utility.cloud.lab:8443
 
-stats: shared=1213 unique=13885 size=676GiB ratio=0.90
-
-oc adm release mirror -a ${LOCAL_SECRET_JSON} --from=quay.io/${PRODUCT_REPO}/${RELEASE_NAME}:${OCP_RELEASE}-${ARCHITECTURE} --to=${LOCAL_REGISTRY}/${LOCAL_REPOSITORY} --to-release-image=${LOCAL_REGISTRY}/${LOCAL_REPOSITORY}:${OCP_RELEASE}-${ARCHITECTURE} --insecure-skip-tls-verify=true
-
-oc adm release extract -a ${LOCAL_SECRET_JSON} --command=openshift-install "${LOCAL_REGISTRY}/${LOCAL_REPOSITORY}:${OCP_RELEASE}-${ARCHITECTURE}"
+*************************************************
 
 Adding mirror registry self-signed certificate to the host - https://access.redhat.com/solutions/6968243
 1. extract cert - openssl s_client -showcerts -connect utility.cloud.lab:8443 (2 certs. root and intermediate)
