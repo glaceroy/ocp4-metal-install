@@ -57,7 +57,6 @@ sudo coreos-installer install /dev/sda --ignition-url http://10.10.0.1:8080/ocp4
 sudo coreos-installer install /dev/sda --ignition-url http://10.10.0.1:8080/ocp4/master.ign --insecure-ignition
 sudo coreos-installer install /dev/sda --ignition-url http://10.10.0.1:8080/ocp4/worker.ign --insecure-ignition
 
-
 *** Commands to monitor the cluster build process *** 
 
 openshift-install gather bootstrap --dir ~/ocp-install/ --bootstrap 10.10.0.200 --master 10.10.0.201 --master 10.10.0.202 --master 10.10.0.203
@@ -73,7 +72,7 @@ INFO[2025-03-04 12:46:33] Quay is available at https://utility.cloud.lab:8443 wi
 
 download images to tar file and then do an upload (RECOMMENDED as it works)
   oc mirror --config=./ocp-imageset-config.yaml file://ose-4.15-images
-  oc mirror --from=./ose-4.15-images/mirror_seq3_000000.tar docker://utility.cloud.lab:8443
+  oc mirror --from=./ose-4.15-images/mirror_seq3_000000.tar docker://utility.cloud.lab:8443 --skip-pruning (skip pruning is important as it will not delete previous versions images from the registry)
 
 or download directly to the mirror registry
   oc mirror --config=./rh-op-imageset-config.yaml docker://utility.cloud.lab:8443
@@ -95,21 +94,6 @@ imageContentSources:
   - utility:8443/ocp4/openshift4
   source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
 
-
-To use the new mirrored repository for upgrades, use the following to create an ImageContentSourcePolicy:
-
-apiVersion: operator.openshift.io/v1alpha1
-kind: ImageContentSourcePolicy
-metadata:
-  name: example
-spec:
-  repositoryDigestMirrors:
-  - mirrors:
-    - utility:8443/ocp4/openshift4
-    source: quay.io/openshift-release-dev/ocp-release
-  - mirrors:
-    - utility:8443/ocp4/openshift4
-    source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
 
 The certs should also be added in install-config.yaml along with the update push secret value for mirror registry
 

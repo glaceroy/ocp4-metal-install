@@ -12,7 +12,7 @@ mirror:                      # This parameter will be useful when updating the c
     - name: kiali-ossm
       channels:
       - name: stable
-        minVersion: '2.4.3'
+        minVersion: '2.4.4'
     - name: openshift-gitops-operator
       channels:
       - name: latest

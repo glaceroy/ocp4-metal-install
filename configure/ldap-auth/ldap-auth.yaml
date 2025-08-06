@@ -1,0 +1,39 @@
+apiVersion: config.openshift.io/v1
+kind: OAuth
+metadata:
+  name: cluster
+spec:
+  identityProviders:
+  - github:
+      clientID: Ov23li9KsH1iAO4mYRiB
+      clientSecret:
+        name: github-secret
+      organizations:
+      - ocp-cloud-lab
+    mappingMethod: claim
+    name: githubidp
+    type: GitHub
+  - htpasswd:
+      fileData:
+        name: htpasswd-secret
+    mappingMethod: claim
+    name: htpasswd_provider
+    type: HTPasswd
+  - name: ldapidp
+    mappingMethod: claim 
+    type: LDAP
+    ldap:
+      attributes:
+        id: 
+        - dn
+        email: 
+        - mail
+        name: 
+        - cn
+        preferredUsername: 
+        - cn
+      bindDN: cn=akadmin,ou=users,dc=ldap,dc=goauthentik,dc=io
+      bindPassword: 
+        name: ldap-secret
+      insecure: true 
+      url: "ldap://idp.cloud.lab:389/ou=users,dc=ldap,dc=goauthentik,dc=io?cn"

@@ -9,6 +9,8 @@ $TTL 1W
 ;
 1.0.10.10.in-addr.arpa.		IN	PTR	api.ocp.cloud.lab.
 1.0.10.10.in-addr.arpa.   IN	PTR	api-int.ocp.cloud.lab.
+1.0.10.10.in-addr.arpa.   IN	PTR	utility.cloud.lab.
+2.0.10.10.in-addr.arpa.   IN	PTR	idp.cloud.lab.
 ;
 200.0.10.10.in-addr.arpa.	IN	PTR	bootstrap.ocp.cloud.lab.
 ;
