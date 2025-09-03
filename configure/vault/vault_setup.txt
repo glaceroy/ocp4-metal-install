@@ -1,0 +1,38 @@
+ef45b5b7-bac3-e6ba-27cf-9e23bcdab7d8
+
+
+https://manjit28.medium.com/setting-up-a-secure-and-highly-available-hashicorp-vault-cluster-for-secrets-and-certificates-0ce01a370582
+
+https://www.youtube.com/watch?v=PQh3sDaPJyg&t=144s
+
+Next Steps
+
+1. Need to create certs for vault
+
+https://discuss.hashicorp.com/t/hashicorp-vault-error-initializing-listener-of-type-tcp-error-loading-tls-cert-where-is-my-mistake/17533
+
+
+[req]
+default_bits = 4096
+default_md = sha256
+distinguished_name = req_distinguished_name
+x509_extensions = v3_req
+prompt = no
+
+[req_distinguished_name]
+C = FR
+ST = VA
+L = SomeCity
+O = MyCompany
+OU = MyDivision
+CN = 192.168.56.9
+
+[v3_req]
+keyUsage = keyEncipherment, dataEncipherment
+extendedKeyUsage = serverAuth
+subjectAltName = @alt_names
+
+[alt_names]
+IP.1 = 192.168.56.9
+
+openssl req -nodes -x509 -days 365 -keyout domain.key -out domain.crt -config cert.conf
