@@ -259,6 +259,13 @@
    # The following should return the answer ocp-bootstrap.lab.ocp.lan from the local server
    dig -x 192.168.22.200
    ```
+   
+   Note: If SELinux is enabled on your system, it might block BIND from accessing the zone files. You can check for SELinux denials by checking the logs in /var/log/audit/audit.log.
+   Firewall: Ensure that your firewall allows DNS traffic (UDP port 53). You can check firewall rules with:
+   sudo firewall-cmd --list-all
+   If necessary, add a rule to allow DNS traffic:
+   sudo firewall-cmd --add-service=dns --permanent
+   sudo firewall-cmd --reload
 
 1. Install & configure DHCP
 
