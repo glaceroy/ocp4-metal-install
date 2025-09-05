@@ -19,7 +19,7 @@ provider "vault" {
 #             Role for server certs
 ########################################################
 resource "vault_pki_secret_backend_role" "role-server-cer" {
-  backend = vault_mount.pki_int.path
+  backend = vault_mount.pki_intermediate.path
   name = "issue-certs-for-${var.server_cert_domain}"
   allowed_domains = [ var.server_cert_domain ]
   allow_subdomains = true
@@ -36,8 +36,8 @@ resource "vault_pki_secret_backend_role" "role-server-cer" {
   country = ["UK"]
   # 2 years
   max_ttl = 63113904 
-  # 30 days
-  ttl = 2592000
+  # 2 years
+  ttl = 63072000
   no_store = false
 
 }
