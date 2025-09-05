@@ -1,9 +1,10 @@
 ########################################################
 #    Create a mount point for the Intermediate CA.
 ########################################################
-resource "vault_mount" "pki_intermediate" {
+resource "vault_mount" "pki_int" {
     type = "pki"
-    path = "pki-intermediate-ca"
+    path = "pki-int-ca"
+    default_lease_ttl_seconds = 63072000 # 2 years
     max_lease_ttl_seconds = 63072000 # 2 years
     description = "Intermediate CA for Cloud Lab"
 }
@@ -12,11 +13,11 @@ resource "vault_mount" "pki_intermediate" {
 # Modify the mount point and set URLs for the issuer and crl.
 ########################################################
 resource "vault_pki_secret_backend_config_urls" "config_urls_int" {
-  depends_on = [ vault_mount.pki_intermediate ]  
-  backend              = vault_mount.pki_intermediate.path
-  issuing_certificates = ["http://192.168.0.25/v1/${vault_mount.pki_intermediate.path}/ca"]
-  crl_distribution_points= ["http://192.168.0.25/v1/${vault_mount.pki_intermediate.path}/crl"]
-  ocsp_servers = ["http://192.168.0.25/v1/${vault_mount.pki_intermediate.path}/ocsp"]
+  depends_on = [ vault_mount.pki_int ]  
+  backend              = vault_mount.pki_int.path
+  issuing_certificates = ["http://192.168.0.25/v1/${vault_mount.pki_int.path}/ca"]
+  crl_distribution_points= ["http://192.168.0.25/v1/${vault_mount.pki_int.path}/crl"]
+  ocsp_servers = ["http://192.168.0.25/v1/${vault_mount.pki_int.path}/ocsp"]
 }
 
 #########################################################
@@ -30,9 +31,10 @@ resource "vault_pki_secret_backend_config_urls" "config_urls_int" {
 # into vault that was generated outside of vault.
 #########################################################
 resource "vault_pki_secret_backend_intermediate_cert_request" "intermediate" {
-  depends_on = [ vault_mount.pki_intermediate ]
+  depends_on = [ vault_mount.pki_int ]
 
-  backend = vault_mount.pki_intermediate.path
+  backend = vault_mount.pki_int.path
+  #backend = vault_mount.root.path
   type = "internal"
   # This appears to be overwritten when the CA signs this cert, I'm not sure 
   # the importance of common_name here.
@@ -61,14 +63,14 @@ resource "vault_pki_secret_backend_root_sign_intermediate" "intermediate" {
   province = "Cheshire"
   country = "UK"
   ttl = 157680000 #5 years
-
 }
+
 # Save the public part of the certifiate and store it in a local file.  Note that I never extract
 # the private key out of vault, so 1) their is no risk of disclosing private key 2) this 
 # intermediate cert is bound to vault.
-resource "local_sensitive_file" "signed_intermediate" {
+resource local_sensitive_file signed_intermediate {
     content = vault_pki_secret_backend_root_sign_intermediate.intermediate.certificate
-    filename = "${path.root}/output/intermediate_ca/intermediate_ca_cert.pem"
+    filename = "${path.root}/output/int_ca/int_cert.pem"
     file_permission = "0400"
 }
 
@@ -82,7 +84,7 @@ resource "local_sensitive_file" "signed_intermediate" {
 # the intermedaite cert and not the whole chain.
 #########################################################
 resource "vault_pki_secret_backend_intermediate_set_signed" "intermediate" { 
- backend = vault_mount.pki_intermediate.path
+ backend = vault_mount.pki_int.path
 
  certificate = "${vault_pki_secret_backend_root_sign_intermediate.intermediate.certificate}\n${tls_self_signed_cert.ca_cert.cert_pem}"
 }

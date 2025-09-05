@@ -15,7 +15,11 @@ variable "vault_token" {
 ########################################################
 #             Vault Certificate Details
 ########################################################
-variable "cert_domain" {
-    description = "We create a role to create certs, what DNS domain will these certs be in"
+variable "server_cert_domain" {
+    description = "We create a role to create server certs, what DNS domain will these certs be in"
+    default = "cloud.lab"
+}
+variable "client_cert_domain" {
+    description = "Allowed Domains for Client Cert"
     default = "cloud.lab"
 }

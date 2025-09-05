@@ -4,9 +4,9 @@
 resource "vault_mount" "root" {
     type = "pki"
     path = "pki-root-ca"
-    description = "Root CA for Cloud Lab"
+    default_lease_ttl_seconds = 31556952 # 1 years
     max_lease_ttl_seconds = 157680000 # 5 years
-
+    description = "Root CA for Cloud Lab"
 }
 
 #########################################################
@@ -46,6 +46,7 @@ resource "vault_pki_secret_backend_config_urls" "config_urls" {
 #     file_permission = "0400"
 # }
 
+
 #########################################################
 # Create a private key for use with the Root CA.
 #########################################################
@@ -58,7 +59,7 @@ resource tls_private_key ca_key {
 #########################################################
 resource local_sensitive_file private_key {
     content = tls_private_key.ca_key.private_key_pem
-    filename = "${path.root}/output/root_ca/root_ca_key.pem"
+    filename = "${path.root}/output/root_ca/ca_key.pem"
     file_permission = "0400"
 }
 
@@ -82,7 +83,6 @@ resource tls_self_signed_cert ca_cert {
      "crl_signing"
    ]
    is_ca_certificate = true 
-
 }
 
 resource local_sensitive_file ca_file {

@@ -19,9 +19,9 @@ provider "vault" {
 #             Role for server certs
 ########################################################
 resource "vault_pki_secret_backend_role" "role-server-cer" {
-  backend = vault_mount.pki_intermediate.path
-  name = "issue-certs-for-${var.cert_domain}"
-  allowed_domains = [ var.cert_domain ]
+  backend = vault_mount.pki_int.path
+  name = "issue-certs-for-${var.server_cert_domain}"
+  allowed_domains = [ var.server_cert_domain ]
   allow_subdomains = true
   allow_glob_domains = false
   allow_any_name = false
