@@ -5,7 +5,7 @@ resource "vault_mount" "pki_intermediate" {
     type = "pki"
     path = "pki-intermediate-ca"
     max_lease_ttl_seconds = 63072000 # 2 years
-    description = "Intermediate Authority for ${var.server_cert_domain}"
+    description = "Intermediate CA for Cloud Lab"
 }
 
 ########################################################
@@ -36,7 +36,7 @@ resource "vault_pki_secret_backend_intermediate_cert_request" "intermediate" {
   type = "internal"
   # This appears to be overwritten when the CA signs this cert, I'm not sure 
   # the importance of common_name here.
-  common_name = "${var.server_cert_domain} Intermediate Certificate"
+  common_name = "Cloud Lab Intermediate CA"
   format = "pem"
   private_key_format = "der"
   key_type = "rsa"
@@ -53,10 +53,13 @@ resource "vault_pki_secret_backend_root_sign_intermediate" "intermediate" {
   backend = vault_mount.root.path
 
   csr = vault_pki_secret_backend_intermediate_cert_request.intermediate.csr
-  common_name = "${var.server_cert_domain} Intermediate Certificate"
+  common_name = "Cloud Lab Intermediate CA"
   exclude_cn_from_sans = true
-  ou = "cloud security"
-  organization = "cloud lab"
+  ou = "Cloud Security"
+  organization = "Cloud Lab"
+  locality = "Warrington"
+  province = "Cheshire"
+  country = "UK"
   ttl = 157680000 #5 years
 
 }

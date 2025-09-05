@@ -4,7 +4,7 @@
 resource "vault_mount" "root" {
     type = "pki"
     path = "pki-root-ca"
-    description = "Root Certificate Authority"
+    description = "Root CA for Cloud Lab"
     max_lease_ttl_seconds = 157680000 # 5 years
 
 }
@@ -68,12 +68,12 @@ resource local_sensitive_file private_key {
 resource tls_self_signed_cert ca_cert {
    private_key_pem = tls_private_key.ca_key.private_key_pem
    subject {
-     common_name = "${var.server_cert_domain} Root CA"
-     organization = "cloud lab"
-     organizational_unit = "cloud security"
-     locality = "warrington"
-     province = "cheshire"
-     country = "uk"
+     common_name = "Cloud Lab Root CA"
+     organization = "Cloud Lab"
+     organizational_unit = "Cloud Security"
+     locality = "Warrington"
+     province = "Cheshire"
+     country = "UK"
    }
    # 175200 = 20 years
    validity_period_hours = 175200
