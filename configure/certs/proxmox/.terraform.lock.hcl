@@ -21,7 +21,8 @@ provider "registry.terraform.io/hashicorp/local" {
 }
 
 provider "registry.terraform.io/hashicorp/vault" {
-  version = "5.2.1"
+  version     = "5.2.1"
+  constraints = "5.2.1"
   hashes = [
     "h1:gM2a6A1klQ6+iaV9eP+XRe/wYOwI0eY6Z553Zaa2x7w=",
     "zh:18c356ee1d67e097ce03a35c8b80433c27ab04674d2cd911a388e05c55ceced0",

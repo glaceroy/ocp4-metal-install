@@ -24,8 +24,8 @@ resource "vault_pki_secret_backend_cert" "cert" {
   backend     = var.backend
   name        = var.role_name
   common_name = var.cert_common_name
+  alt_names   = var.alt_names
   ip_sans     = var.cert_ip_sans
-  ttl         = var.cert_ttl
   revoke      = var.revoke
 }
 

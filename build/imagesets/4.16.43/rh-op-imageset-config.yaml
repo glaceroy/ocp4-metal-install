@@ -12,22 +12,24 @@ mirror:                      # This parameter will be useful when updating the c
     - name: kiali-ossm
       channels:
       - name: stable
-        minVersion: '2.4.4'
+        minVersion: '2.4.7'
     - name: openshift-gitops-operator
       channels:
       - name: latest
-        minVersion: '1.16.0'
+        minVersion: '1.17.1'
     - name: openshift-pipelines-operator-rh
       channels:
       - name: latest
-        minVersion: '1.18.0'
+        minVersion: '1.19.3'
     - name: servicemeshoperator
       channels:
       - name: stable
-        minVersion: '2.6.6'
+        minVersion: '2.6.9'
     - name: servicemeshoperator3
       channels:
       - name: stable
-        minVersion: '3.0.0'
-      - name: stable-3.0
-        minVersion: '3.0.0'
+        minVersion: '3.0.4'
+    - name: openshift-cert-manager-operator
+      channels:
+      - name: stable-v1
+        minVersion: '1.7.0'

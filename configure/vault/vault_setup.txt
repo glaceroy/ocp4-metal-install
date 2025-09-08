@@ -12,27 +12,27 @@ Next Steps
 https://discuss.hashicorp.com/t/hashicorp-vault-error-initializing-listener-of-type-tcp-error-loading-tls-cert-where-is-my-mistake/17533
 
 
-[req]
-default_bits = 4096
-default_md = sha256
-distinguished_name = req_distinguished_name
-x509_extensions = v3_req
-prompt = no
+Enabling tls
+1. update hcl file - /opt/vault/config.hcl and add
+  tls_cert_file            = "/etc/vault.d/client.pem"
+  tls_key_file             = "/etc/vault.d/cert.key"
+  tls_disable_client_certs = true
 
-[req_distinguished_name]
-C = FR
-ST = VA
-L = SomeCity
-O = MyCompany
-OU = MyDivision
-CN = 192.168.56.9
+2. after enabling tls use the below flag when using vault cli
+export VAULT_SKIP_VERIFY=true
+export VAULT_ADDR='https://192.168.0.25:8200'
+export VAULT_TOKEN='hvs.ArVyUDJ5bb5pPwVqONsTVu2x'
 
-[v3_req]
-keyUsage = keyEncipherment, dataEncipherment
-extendedKeyUsage = serverAuth
-subjectAltName = @alt_names
+Enabling LDAP authentication
 
-[alt_names]
-IP.1 = 192.168.56.9
-
-openssl req -nodes -x509 -days 365 -keyout domain.key -out domain.crt -config cert.conf
+vault write auth/ldap/config \
+    url="ldap://idp.cloud.lab:389" \
+    userattr="sAMAccountName" \
+    userdn="ou=users,dc=ldap,dc=goauthentik,dc=io" \
+    groupdn="ou=users,dc=ldap,dc=goauthentik,dc=io" \
+    groupfilter="(&(objectClass=person)(uid={{.Username}}))" \
+    groupattr="memberOf" \
+    binddn="cn=akadmin,ou=users,dc=ldap,dc=goauthentik,dc=io" \
+    bindpass="cloudaiyaz123"
+    insecure_tls=true
+    starttls=false

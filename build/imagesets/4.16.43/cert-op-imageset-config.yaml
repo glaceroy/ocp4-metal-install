@@ -10,9 +10,10 @@ mirror:                     # This parameter will be useful when updating the cl
     targetName: 'certified-operator-index'
     targetTag: 'v4.16.1'
     packages:
-    - name: portworx-certified
+    - name: vault-secrets-operator
       channels:
       - name: stable
-        minVersion: '23.10.5'
+        minVersion: '0.10.0'
+        maxVersion: '0.10.0'
   additionalImages:
   helm: {}

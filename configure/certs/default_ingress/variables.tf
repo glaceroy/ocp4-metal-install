@@ -40,13 +40,11 @@ variable "cert_common_name" {
   default     = "ocp.cloud.lab"
 }
 
-
-variable "cert_ttl" {
-  description = "The time to live for the certificate"
-  type        = number
-  default     = 3600
+variable "alt_names" {
+  description = "The Subject Alternative Names for the certificate"
+  type        = list(string)
+  default     = ["*.apps.ocp.cloud.lab"]
 }
-
 variable "cert_ip_sans" {
   description = "The IP Subject Alternative Names for the certificate"
   type        = list(string)

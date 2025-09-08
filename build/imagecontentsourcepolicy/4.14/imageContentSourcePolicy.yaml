@@ -1,0 +1,35 @@
+---
+apiVersion: operator.openshift.io/v1alpha1
+kind: ImageContentSourcePolicy
+metadata:
+  name: generic-0
+spec:
+  repositoryDigestMirrors:
+  - mirrors:
+    - utility.cloud.lab:8443/ubi8
+    source: registry.access.redhat.com/ubi8
+  - mirrors:
+    - utility.cloud.lab:8443/ubi9
+    source: registry.redhat.io/ubi9
+  - mirrors:
+    - utility.cloud.lab:8443/rhel8
+    source: registry.redhat.io/rhel8
+  - mirrors:
+    - utility.cloud.lab:8443/ubi8
+    source: registry.redhat.io/ubi8
+  - mirrors:
+    - utility.cloud.lab:8443/openshift4
+    source: registry.redhat.io/openshift4
+---
+apiVersion: operator.openshift.io/v1alpha1
+kind: ImageContentSourcePolicy
+metadata:
+  name: release-0
+spec:
+  repositoryDigestMirrors:
+  - mirrors:
+    - utility.cloud.lab:8443/openshift/release
+    source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
+  - mirrors:
+    - utility.cloud.lab:8443/openshift/release-images
+    source: quay.io/openshift-release-dev/ocp-release

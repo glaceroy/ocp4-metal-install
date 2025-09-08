@@ -1,0 +1,11 @@
+ref article - https://forum.proxmox.com/threads/configuring-freeipa-ldap-server-with-proxmox.113500/
+
+proxmox
+
+base domain 	        - dc=ldap,dc=goauthentik,dc=io
+user attribute 	        - sAMAccountName
+group name attribute    - cn
+bindDN 			        - cn=akadmin,ou=users,dc=ldap,dc=goauthentik,dc=io
+server 			        - idp.cloud.lab
+user filter		        - (&(memberOf=cn=private_cloud_users,ou=groups,dc=ldap,dc=goauthentik,dc=io))
+group filter	        - leave this empty
