@@ -10,7 +10,6 @@ spec:
     clientCertificatePolicy: ""
   defaultCertificate:
     name: default-ingress
-  domain: apps.ocp.cloud.lab
   endpointPublishingStrategy:
     hostNetwork:
       httpPort: 80
