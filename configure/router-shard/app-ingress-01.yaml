@@ -8,7 +8,7 @@ spec:
     clientCA:
       name: ""
     clientCertificatePolicy: ""
-  domain: ocp.cloud.lab
+  domain: app-ingress-01.ocp.cloud.lab
   endpointPublishingStrategy:
     nodePort:
       protocol: PROXY
@@ -17,6 +17,7 @@ spec:
   httpEmptyRequestsPolicy: Respond
   httpErrorCodePages:
     name: ""
+  idleConnectionTerminationPolicy: Deferred
   logging:
     access:
       destination:
