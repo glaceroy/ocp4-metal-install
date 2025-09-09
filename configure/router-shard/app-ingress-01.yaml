@@ -1,0 +1,40 @@
+apiVersion: operator.openshift.io/v1
+kind: IngressController
+metadata:
+  creationTimestamp: "2025-09-09T20:52:26Z"
+  finalizers:
+  - ingresscontroller.operator.openshift.io/finalizer-ingresscontroller
+  generation: 2
+  labels:
+    app.kubernetes.io/instance: app-ingress-controller
+  name: app-ingress-01
+  namespace: openshift-ingress-operator
+  resourceVersion: "267069590"
+  uid: c4984d67-db92-4b2e-9de8-310ea2572201
+spec:
+  clientTLS:
+    clientCA:
+      name: ""
+    clientCertificatePolicy: ""
+  domain: ocp.cloud.lab
+  endpointPublishingStrategy:
+    nodePort:
+      protocol: PROXY
+    type: NodePortService
+  httpCompression: {}
+  httpEmptyRequestsPolicy: Respond
+  httpErrorCodePages:
+    name: ""
+  logging:
+    access:
+      destination:
+        type: Container
+      httpCaptureHeaders: {}
+      logEmptyRequests: Log
+  namespaceSelector:
+    matchLabels:
+      ingress-shard: app-ingress-01
+  replicas: 2
+  tuningOptions:
+    reloadInterval: 0s
+  unsupportedConfigOverrides: null
