@@ -1,16 +1,8 @@
 apiVersion: operator.openshift.io/v1
 kind: IngressController
 metadata:
-  creationTimestamp: "2025-09-09T20:52:26Z"
-  finalizers:
-  - ingresscontroller.operator.openshift.io/finalizer-ingresscontroller
-  generation: 2
-  labels:
-    app.kubernetes.io/instance: app-ingress-controller
   name: app-ingress-01
   namespace: openshift-ingress-operator
-  resourceVersion: "267069590"
-  uid: c4984d67-db92-4b2e-9de8-310ea2572201
 spec:
   clientTLS:
     clientCA:
