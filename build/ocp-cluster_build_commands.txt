@@ -32,7 +32,9 @@ utility.ocp.cloud.lab - 192.168.0.47
 Download the openshift installer binary with the correct/intented version
 
 Example 4.16.9
-https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/4.16.19/
+
+rhcos iso - https://mirror.openshift.com/pub/openshift-v4/x86_64/dependencies/rhcos/4.16/4.16.36/
+oc client - https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/4.16.19/
 
 
 *** Using Full Control installer from redhat ***

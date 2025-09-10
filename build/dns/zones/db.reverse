@@ -22,5 +22,6 @@ $TTL 1W
 212.0.10.10.in-addr.arpa.	IN	PTR	worker02.ocp.cloud.lab.
 213.0.10.10.in-addr.arpa.	IN	PTR	worker03.ocp.cloud.lab.
 214.0.10.10.in-addr.arpa.	IN	PTR	worker04.ocp.cloud.lab.
+215.0.10.10.in-addr.arpa.	IN	PTR	worker05.ocp.cloud.lab.
 ;
 ;EOF

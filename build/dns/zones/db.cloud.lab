@@ -26,5 +26,6 @@ worker01.ocp.cloud.lab.   	IN  A 10.10.0.211
 worker02.ocp.cloud.lab.   	IN  A 10.10.0.212
 worker03.ocp.cloud.lab.   	IN  A 10.10.0.213
 worker04.ocp.cloud.lab.   	IN  A 10.10.0.214
+worker05.ocp.cloud.lab.   	IN  A 10.10.0.215
 ;
 ;EOF
