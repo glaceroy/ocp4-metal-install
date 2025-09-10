@@ -16,6 +16,10 @@ api-int.ocp.cloud.lab.    	IN  A 10.10.0.1
 ;
 *.apps.ocp.cloud.lab.     	IN  A 10.10.0.1
 ;
+nginx-shard.ocp.cloud.lab.  IN  A 10.10.0.2
+;
+bookinfo-development.ocp.cloud.lab.	IN  A 10.10.0.2
+;
 bootstrap.ocp.cloud.lab.    IN  A 10.10.0.200
 ;
 master01.ocp.cloud.lab.   	IN  A 10.10.0.201
