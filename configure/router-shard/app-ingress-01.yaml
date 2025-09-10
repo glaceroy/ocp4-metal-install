@@ -27,6 +27,10 @@ spec:
   namespaceSelector:
     matchLabels:
       ingress-shard: app-ingress-01
+  nodePlacement:
+    nodeSelector:
+      matchLabels:
+        node-role.kubernetes.io/infra-proxy: ""
   replicas: 2
   tuningOptions:
     reloadInterval: 0s
