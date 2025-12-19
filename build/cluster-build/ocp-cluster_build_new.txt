@@ -1,0 +1,29 @@
+*** AK Home LAB *** 
+
+utility VM ROOT Password - aiyaz
+idm VM Root Password - aiyaz
+registry VM Root Password - aiyaz
+
+*** OCP Cluster ***
+
+3 OCP Masters 
+2 OCP Workers
+1 Bootstrap Server
+1 NAT Gateway, haproxy, firewalld, apache, nfs, DNS, DHCP, Mirror Registry Server
+
+MAC Addresses
+master01.ocp.cloud.lab  - BC:24:11:B2:9B:16
+master02.ocp.cloud.lab  - BC:24:11:2B:5B:65
+master03.ocp.cloud.lab  - BC:24:11:74:7E:18
+worker01.ocp.cloud.lab  - BC:24:11:3E:AA:C5
+worker02.ocp.cloud.lab  - BC:24:11:D7:17:06
+bootstrap.ocp.cloud.lab - BC:24:11:0F:3F:17
+utility.ocp.cloud.lab   - 192.168.0.79
+registry.ocp.cloud.lab  -
+idm.ocp.cloud.lab       - 
+
+*********************************************************
+Installation 
+
+1. Utility VM
+- Install and configure ansible - https://www.digitalocean.com/community/tutorials/how-to-install-and-configure-ansible-on-centos-7
