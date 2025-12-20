@@ -1,0 +1,44 @@
+---
+- name: Set firewalld zone for NetworkManager connection
+  hosts: 127.0.0.1
+  connection: local
+  become: true
+  tasks:
+    - name: Set connection ens224 to internal zone
+      command: >
+        nmcli connection modify ens224 connection.zone internal
+
+    - name: Restart connection ens224
+      command: >
+        nmcli connection down ens224
+      ignore_errors: true
+
+    - name: Bring connection ens224 up
+      command: >
+        nmcli connection up ens224
+
+    - name: Verify zone assignment
+      command: nmcli -f NAME,ZONE connection show ens192
+      register: zone_check
+
+    - debug:
+        var: zone_check.stdout
+
+    - name: Set connection ens192 to external zone
+      command: nmcli connection modify ens192 connection.zone external
+
+    - name: Restart connection ens192
+      command: nmcli connection down ens192
+      ignore_errors: true
+
+    - name: Bring connection ens192 up
+      command: nmcli connection up ens192
+
+    - name: Verify zone assignment
+      command: nmcli -f NAME,ZONE connection show ens192
+      register: zone_check
+
+    - debug:
+        var: zone_check.stdout
+
+
