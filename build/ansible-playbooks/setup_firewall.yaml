@@ -1,0 +1,53 @@
+---
+- name: Set firewalld zone for NetworkManager connection
+  hosts: 127.0.0.1
+  connection: local
+  become: true
+  tasks:
+    - name: Set connection ens224 to internal zone
+      community.general.nmcli:
+        conn_name: ens19
+        zone: internal
+        state: present
+
+    - name: Set connection ens192 to external zone
+      community.general.nmcli:
+        conn_name: ens18
+        zone: external
+        state: present
+
+    - name: Get current firewalld zones
+      community.general.nmcli:
+        state: info
+      register: nmcli_info
+
+    - name: Display current firewalld zones
+      debug:
+        var: nmcli_info.connections
+
+    - name: Add masquerade to internal zone
+      ansible.posix.firewalld:
+        zone: internal
+        masquerade: yes
+        permanent: true
+        immediate: true
+
+    - name: Add masquerade to external zone
+      ansible.posix.firewalld:
+        zone: external
+        masquerade: yes
+        permanent: true
+        immediate: true
+
+    - name: Reload NetworkManager connections
+      community.general.nmcli:
+        state: reload
+
+    - name: Reload firewalld  
+      ansible.posix.firewalld:
+        state: reloaded
+
+
+
+
+

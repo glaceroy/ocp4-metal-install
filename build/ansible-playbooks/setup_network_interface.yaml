@@ -1,0 +1,33 @@
+---
+- name: Setup network interface
+  hosts: 127.0.0.1
+  connection: local
+  become: true
+  tasks:
+    - name: Setup and configure LAN NIC for internal zone
+      community.general.nmcli:
+        conn_name: ens19
+        ifname: ens19
+        type: ethernet
+        ip4: 10.10.0.0/24
+        ipv4.never-default: yes
+        autoconnect: yes
+        state: present
+        dns4:
+          - 127.0.0.1
+        dns4_search:
+          - ocp.cloud.lab
+
+    - name: Configure LAN NIC for external zone 
+      community.general.nmcli:
+        conn_name: ens18
+        ifname: ens18
+        type: ethernet
+        dns4:
+          - 127.0.0.1 
+        ipv4.ignore-auto-dns: yes
+
+    - name: Reload NetworkManager connections
+      community.general.nmcli:
+        state: reload
+        

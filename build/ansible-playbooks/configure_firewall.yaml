@@ -1,44 +1,130 @@
 ---
-- name: Set firewalld zone for NetworkManager connection
-  hosts: 127.0.0.1
+- hosts: 127.0.0.1
   connection: local
-  become: true
   tasks:
-    - name: Set connection ens224 to internal zone
-      command: >
-        nmcli connection modify ens224 connection.zone internal
+  - name: Permanently enable https service in internal zone, also enable it immediately if possible
+    ansible.posix.firewalld:
+      service: https
+      state: enabled
+      zone: internal
+      permanent: true
+      immediate: true
+      offline: true
 
-    - name: Restart connection ens224
-      command: >
-        nmcli connection down ens224
-      ignore_errors: true
+  - name: Permanently enable https service in external zone, also enable it immediately if possible
+    ansible.posix.firewalld:
+      service: https
+      state: enabled
+      zone: external
+      permanent: true
+      immediate: true
+      offline: true
 
-    - name: Bring connection ens224 up
-      command: >
-        nmcli connection up ens224
+  - name: Permanently enable dhcp service in internal zone, also enable it immediately if possible
+    ansible.posix.firewalld:
+      service: dhcp
+      state: enabled
+      zone: internal
+      permanent: true
+      immediate: true
+      offline: true
 
-    - name: Verify zone assignment
-      command: nmcli -f NAME,ZONE connection show ens192
-      register: zone_check
+  - name: Permanently enable http service in the internal zone, also enable it immediately if possible
+    ansible.posix.firewalld:
+      service: http
+      state: enabled
+      zone: internal
+      permanent: true
+      immediate: true
+      offline: true
 
-    - debug:
-        var: zone_check.stdout
+  - name: Permanently enable http service in the external zone, also enable it immediately if possible
+    ansible.posix.firewalld:
+      service: http
+      state: enabled
+      zone: external
+      permanent: true
+      immediate: true
+      offline: true
 
-    - name: Set connection ens192 to external zone
-      command: nmcli connection modify ens192 connection.zone external
+  - name: Permanently enable mountd service in the internal zone, also enable it immediately if possible
+    ansible.posix.firewalld:
+      service: mountd
+      state: enabled
+      zone: internal
+      permanent: true
+      immediate: true
+      offline: true
 
-    - name: Restart connection ens192
-      command: nmcli connection down ens192
-      ignore_errors: true
+  - name: Permanently enable rpc-bind service in the internal zone, also enable it immediately if possible
+    ansible.posix.firewalld:
+      service: rpc-bind
+      state: enabled
+      zone: internal
+      permanent: true
+      immediate: true
+      offline: true
 
-    - name: Bring connection ens192 up
-      command: nmcli connection up ens192
+  - name: Permanently enable nfs service in the internal zone, also enable it immediately if possible
+    ansible.posix.firewalld:
+      service: nfs
+      state: enabled
+      zone: internal
+      permanent: true
+      immediate: true
+      offline: true
 
-    - name: Verify zone assignment
-      command: nmcli -f NAME,ZONE connection show ens192
-      register: zone_check
+  - name: Permit traffic in default zone for https service
+    ansible.posix.firewalld:
+      service: https
+      permanent: true
+      state: enabled
 
-    - debug:
-        var: zone_check.stdout
+  - name: Permit traffic in internal zone on port 53/udp
+    ansible.posix.firewalld:
+      port: 53/udp
+      zone: internal
+      permanent: true
+      state: enabled
 
+  - name: Permit traffic in internal zone on port 53/tcp
+    ansible.posix.firewalld:
+      port: 53/tcp
+      zone: internal
+      permanent: true
+      state: enabled
 
+  - name: Permit traffic in internal zone on port 8080/tcp
+    ansible.posix.firewalld:
+      port: 8080/tcp
+      zone: internal
+      permanent: true
+      state: enabled
+
+  - name: Permit traffic in internal zone on port 6443/tcp # kube-api-server on control plane nodes
+    ansible.posix.firewalld:
+      port: 6443/tcp
+      zone: internal
+      permanent: true
+      state: enabled
+
+  - name: Permit traffic in external zone on port 6443/tcp # kube-api-server on control plane nodes
+    ansible.posix.firewalld:
+      port: 6443/tcp
+      zone: external
+      permanent: true
+      state: enabled
+
+  - name: Permit traffic in internal zone on port 22623/tcp # machine config server on control plane nodes
+    ansible.posix.firewalld:
+      port: 22623/tcp
+      zone: internal
+      permanent: true
+      state: enabled  
+
+  - name: Permit traffic in external zone on port 9000/tcp # HAProxy Stats
+    ansible.posix.firewalld:
+      port: 9000/tcp
+      zone: external
+      permanent: true
+      state: enabled

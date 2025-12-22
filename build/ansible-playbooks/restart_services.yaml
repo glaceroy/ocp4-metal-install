@@ -1,0 +1,38 @@
+---
+- hosts: 127.0.0.1
+  connection: local
+  tasks:
+  - name: Restart named service
+    systemd:
+      name: named
+      state: restarted
+
+  - name: Restart dhcpd service
+    systemd:
+      name: dhcpd
+      state: restarted
+
+  - name: Restart httpd service
+    systemd:
+      name: httpd
+      state: restarted 
+
+  - name: Restart haproxy service
+    systemd:
+      name: haproxy
+      state: restarted 
+
+  - name: Restart nfs-server service
+    systemd:  
+      name: nfs-server
+      state: restarted
+
+  - name: Restart rpcbind service
+    systemd:
+      name: rpcbind
+      state: restarted
+
+  - name: Restart nfs-mountd service
+    systemd:
+      name: nfs-mountd
+      state: restarted
