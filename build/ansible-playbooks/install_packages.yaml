@@ -57,8 +57,7 @@
         url: "https://dl.k8s.io/release/{{ latest_kubectl_version }}/bin/linux/amd64/kubectl"
         dest: "{{ install_path }}/kubectl"
         mode: '0755'
-        force: yes
-      when: ('v' ~ installed_version) is version(latest_kubectl_version, '<')
+      when: current_kubectl.failed or ('v' ~ installed_version) is version(latest_kubectl_version, '<')
 
     ###############################
     # OC CLIENT INSTALL / UPDATE
@@ -86,12 +85,12 @@
 
     - name: Download and extract oc client if needed
       ansible.builtin.unarchive:
-        src: "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/{{ latest_oc_version_clean }}/openshift-client-linux.tar.gz"
+        src: "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/{{ oc_version }}/openshift-client-linux.tar.gz"
         dest: "{{ install_path }}"
         mode: '0755'
         remote_src: yes
         exclude: '*.md'
-      when: installed_oc_version is version(oc_version, '<')
+      when: not oc_stat.stat.exists or installed_oc_version is version(oc_version, '<')
 
     ###############################
     # BASH COMPLETION
@@ -121,11 +120,15 @@
 
     - name: Copy zone files for ocp.cloud.lab
       ansible.builtin.copy:
-        src: "{{ files_source_path }}/dns/zones/"
+        src: "{{ files_source_path }}/dns/zones/{{ item }}"
         dest: /etc/named/
         owner: named
         group: named
         mode: '0644'
+        force: yes
+      loop:
+        - db.cloud.lab
+        - db.reverse
 
     - name: Copy dhcpd configuration file
       ansible.builtin.copy:
@@ -170,8 +173,20 @@
     - name: Configure NFS export for registry
       ansible.builtin.lineinfile:
         path: /etc/exports
+        regexp: "^/shares/registry"
         line: "/shares/registry {{ server_ip }}/24(rw,sync,root_squash,no_subtree_check,no_wdelay)"
         create: yes
 
     - name: Reload NFS exports
       ansible.builtin.command: exportfs -rv
+
+    ###############################
+    # Validate DNS configuration
+    ###############################
+    - name: Validate forward zone
+      command: named-checkzone cloud.lab /etc/named/db.cloud.lab
+      changed_when: false
+
+    - name: Validate reverse zone
+      command: named-checkzone 0.10.10.in-addr.arpa /etc/named/db.reverse
+      changed_when: false
