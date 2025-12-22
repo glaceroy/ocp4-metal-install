@@ -1,33 +1,17 @@
 ---
 - hosts: 127.0.0.1
   connection: local
-  tasks: 
-  - name: Ensure bind is started and enabled
-    systemd:
-      name: named
-      state: started
-      enabled: yes
+  become: true
 
-  - name: Ensure httpd is started and enabled
-    systemd:
-      name: httpd
-      state: started
-      enabled: yes  
-
-  - name: Ensure dhcpd is started and enabled
-    systemd:
-      name: dhcpd
-      state: started
-      enabled: yes  
-
-  - name: Ensure haproxy is started and enabled
-    systemd:
-      name: haproxy
-      state: started  
-      enabled: yes  
-
-  - name: Ensure nfs-server is started and enabled
-    systemd:
-      name: nfs-server
-      state: started  
-      enabled: yes
+  tasks:
+    - name: Ensure services are started and enabled
+      systemd:
+        name: "{{ item }}"
+        state: started
+        enabled: yes
+      loop:
+        - named
+        - httpd
+        - dhcpd
+        - haproxy
+        - nfs-server

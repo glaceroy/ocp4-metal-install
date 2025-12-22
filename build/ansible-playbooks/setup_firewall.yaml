@@ -3,51 +3,82 @@
   hosts: 127.0.0.1
   connection: local
   become: true
+
+  vars:
+    internal_interface: ens19
+    external_interface: ens18
+  
   tasks:
-    - name: Set connection ens224 to internal zone
+    - name: Set connection {{ internal_interface }} to internal zone
       community.general.nmcli:
-        conn_name: ens19
+        conn_name: "{{ internal_interface }}"
         zone: internal
         state: present
 
-    - name: Set connection ens192 to external zone
+    - name: Set connection {{ external_interface }} to external zone
       community.general.nmcli:
-        conn_name: ens18
+        conn_name: "{{ external_interface }}"
         zone: external
         state: present
+  
+    - name: Bring up internal interface
+      ansible.builtin.command:
+        cmd: nmcli connection up "{{ internal_interface }}"
+      changed_when: false
 
-    - name: Get current firewalld zones
-      community.general.nmcli:
-        state: info
-      register: nmcli_info
+    - name: Bring up external interface
+      ansible.builtin.command:
+        cmd: nmcli connection up "{{ external_interface }}"
+      changed_when: false
 
-    - name: Display current firewalld zones
-      debug:
-        var: nmcli_info.connections
+    - name: Enable IPv4 forwarding
+      ansible.posix.sysctl:
+        name: net.ipv4.ip_forward
+        value: '1'
+        sysctl_set: true
+        state: present
+        reload: true
 
-    - name: Add masquerade to internal zone
+    - name: Enable masquerade to internal zone
       ansible.posix.firewalld:
         zone: internal
+        masquerade: yes
+        state: enabled
+        permanent: true
+        immediate: true
+
+    - name: Enable masquerade to external zone
+      ansible.posix.firewalld:
+        zone: external
+        state: enabled
         masquerade: yes
         permanent: true
         immediate: true
 
-    - name: Add masquerade to external zone
-      ansible.posix.firewalld:
-        zone: external
-        masquerade: yes
-        permanent: true
-        immediate: true
+    - name: Get firewalld active zones
+      command: firewall-cmd --get-active-zones
+      register: active_zones
+      changed_when: false
 
-    - name: Reload NetworkManager connections
-      community.general.nmcli:
-        state: reload
+    - name: Display active zones
+      ansible.builtin.debug:
+        msg: "{{ active_zones.stdout_lines }}"
 
-    - name: Reload firewalld  
-      ansible.posix.firewalld:
-        state: reloaded
+    - name: Get zone of internal interface
+      command: firewall-cmd --get-zone-of-interface={{ internal_interface }}
+      register: internal_zone
+      changed_when: false
 
+    - name: Display internal interface zone
+      ansible.builtin.debug:
+        msg: "Internal interface {{ internal_interface }} is in zone {{ internal_zone.stdout }}"
 
+    - name: Get zone of external interface
+      command: firewall-cmd --get-zone-of-interface={{ external_interface }}
+      register: external_zone
+      changed_when: false
 
-
+    - name: Display external interface zone
+      ansible.builtin.debug:
+        msg: "External interface {{ external_interface }} is in zone {{ external_zone.stdout }}"
 

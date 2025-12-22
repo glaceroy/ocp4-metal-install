@@ -3,31 +3,48 @@
   hosts: 127.0.0.1
   connection: local
   become: true
+
+  vars:
+    internal_interface: ens19
+    external_interface: ens18
+    internal_ip: 10.10.0.0/24
+    dns4_search_domains:
+      - cloud.lab
+
   tasks:
     - name: Setup and configure LAN NIC for internal zone
       community.general.nmcli:
-        conn_name: ens19
-        ifname: ens19
+        conn_name: "{{ internal_interface }}"
+        ifname: "{{ internal_interface }}"
         type: ethernet
-        ip4: 10.10.0.0/24
-        ipv4.never-default: yes
-        autoconnect: yes
         state: present
+        autoconnect: yes
+        ip4:
+          - "{{ internal_ip }}"
+        never_default4: true
         dns4:
           - 127.0.0.1
-        dns4_search:
-          - ocp.cloud.lab
+        dns4_search: "{{ dns4_search_domains }}"
 
-    - name: Configure LAN NIC for external zone 
+    - name: Configure LAN NIC for external zone
       community.general.nmcli:
-        conn_name: ens18
-        ifname: ens18
+        conn_name: "{{ external_interface }}"
+        ifname: "{{ external_interface }}"
         type: ethernet
+        state: present
+        dns4_ignore_auto: true
         dns4:
-          - 127.0.0.1 
-        ipv4.ignore-auto-dns: yes
+          - 127.0.0.1
 
-    - name: Reload NetworkManager connections
-      community.general.nmcli:
-        state: reload
-        
+    - name: Bring up internal interface
+      ansible.builtin.command:
+        cmd: nmcli connection up "{{ internal_interface }}"
+      changed_when: false
+
+    - name: Bring up external interface
+      ansible.builtin.command:
+        cmd: nmcli connection up "{{ external_interface }}"
+      changed_when: false
+
+
+

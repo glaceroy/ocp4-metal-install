@@ -118,17 +118,27 @@
         group: root
         mode: '0644'
 
+    - name: Ensure named zones directory exists
+      ansible.builtin.file:
+        path: /etc/named/zones
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
     - name: Copy zone files for ocp.cloud.lab
       ansible.builtin.copy:
         src: "{{ files_source_path }}/dns/zones/{{ item }}"
-        dest: /etc/named/
-        owner: named
-        group: named
+        dest: /etc/named/zones/{{ item }}
+        owner: root
+        group: root
         mode: '0644'
         force: yes
       loop:
         - db.cloud.lab
         - db.reverse
+      loop_control:
+        label: "{{ item }}"
 
     - name: Copy dhcpd configuration file
       ansible.builtin.copy:
@@ -184,9 +194,9 @@
     # Validate DNS configuration
     ###############################
     - name: Validate forward zone
-      command: named-checkzone cloud.lab /etc/named/db.cloud.lab
+      command: named-checkzone cloud.lab /etc/named/zones/db.cloud.lab
       changed_when: false
 
     - name: Validate reverse zone
-      command: named-checkzone 0.10.10.in-addr.arpa /etc/named/db.reverse
+      command: named-checkzone 0.10.10.in-addr.arpa /etc/named/zones/db.reverse
       changed_when: false
