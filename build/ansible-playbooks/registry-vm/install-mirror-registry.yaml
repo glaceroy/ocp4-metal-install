@@ -1,81 +1,68 @@
 ---
-- hosts: registry.cloud.lab
+- hosts: 127.0.0.1
+  connection: local
   become: true
-
+  
   vars:
-    registry_port: 5000
-    registry_data_dir: /opt/registry/data
-    registry_cert_dir: /etc/registry/certs
-    registry_image: registry:2
-    registry_service_name: local-registry
+    oc_mirror_version: "1.3.11"   # desired version
+    download_dir: "/root"
+    mirror_binary_path: "{{ download_dir }}/mirror-registry"
 
   tasks:
-
-    - name: Install required packages
+    - name: Ensure required packages are installed
       yum:
         name:
-          - podman
-          - podman-docker
-          - firewall
-          - policycoreutils-python-utils  # for semanage
+          - wget
+          - tar
         state: present
 
-    - name: Create registry data directory
-      file:
-        path: "{{ registry_data_dir }}"
-        state: directory
-        owner: root
-        group: root
-        mode: '0755'
-
-    - name: Create registry cert directory
-      file:
-        path: "{{ registry_cert_dir }}"
-        state: directory
-        owner: root
-        group: root
-        mode: '0755'
-
-    - name: Generate self-signed certificate for registry
-      command: >
-        openssl req -newkey rsa:4096 -nodes -keyout {{ registry_cert_dir }}/domain.key
-        -x509 -days 365 -out {{ registry_cert_dir }}/domain.crt
-        -subj "/CN=registry.cloud.lab/O=local"
-      args:
-        creates: "{{ registry_cert_dir }}/domain.crt"
-
-    - name: Set SELinux boolean to allow container registry access
-      ansible.builtin.command: setsebool -P container_manage_cgroup 1
-
-    - name: Open registry port in firewall
-      firewalld:
-        service: registry
-        permanent: yes
-        state: enabled
-        immediate: yes
-
-    - name: Pull registry image
-      command: podman pull registry:2
-
-    - name: Run local registry container
-      command: >
-        podman run -d --name local-registry
-        -p 5000:5000
-        -v /opt/registry/data:/var/lib/registry:z
-        -v /etc/registry/certs:/certs:z
-        -e REGISTRY_HTTP_TLS_CERTIFICATE=/certs/domain.crt
-        -e REGISTRY_HTTP_TLS_KEY=/certs/domain.key
-        --restart=always
-        registry:2
-      args:
-        creates: /opt/registry/data/registry_container_created
-
-
-    - name: Verify registry is listening
-      shell: "ss -tlnp | grep :{{ registry_port }}"
-      register: registry_listen
+    - name: Check if oc-mirror is already installed
+      command: "{{ mirror_binary_path }} --version"
+      register: mirror_installed
+      ignore_errors: true
       changed_when: false
 
-    - name: Display registry listening info
+    - name: Extract installed version
+      set_fact:
+        installed_version: "{{ mirror_installed.stdout | regex_search('[0-9]+\\.[0-9]+\\.[0-9]+') | default('0.0.0') }}"
+
+    - name: Set install_needed flag
+      set_fact:
+        install_needed: "{{ mirror_installed.rc != 0 or (installed_version is version(oc_mirror_version, '<')) }}"
+
+    - name: Download OpenShift oc-mirror binary
+      ansible.builtin.get_url:
+        url: "https://developers.redhat.com/content-gateway/file/pub/openshift-v4/clients/mirror-registry/{{ oc_mirror_version }}/mirror-registry.tar.gz"
+        dest: "{{ download_dir }}/mirror-registry.tar.gz"
+        mode: '0644'
+      when: install_needed
+
+    - name: Extract oc-mirror tarball
+      ansible.builtin.unarchive:
+        src: "{{ download_dir }}/mirror-registry.tar.gz"
+        dest: "{{ download_dir }}/"
+        remote_src: yes
+        mode: '0755'
+      when: install_needed
+
+    - name: Verify oc-mirror installation
+      command: "{{ mirror_binary_path }} --version"
+      register: mirror_version
+      changed_when: false
+
+    - name: Show oc-mirror version
       debug:
-        var: registry_listen.stdout_lines
+        var: mirror_version.stdout_lines
+
+    - name: Set registry hostname
+      command: "hostname -f"
+      register: hostname_result
+
+    - name: Install mirror registry
+      command: "{{ download_dir }}/mirror-registry install --quayHostname {{ hostname_result.stdout }}"
+      register: mirror_install
+      ignore_errors: false
+
+    - name: Show mirror install output
+      debug: 
+        var: mirror_install.stdout_lines
