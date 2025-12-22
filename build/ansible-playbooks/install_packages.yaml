@@ -39,6 +39,71 @@
       remote_src: yes
       exclude: '*.md'
 
+  - name: Copy bind DNS configuration file
+    ansible.builtin.copy:
+      src: ~/ocp4-metal-install/build/dns/named.conf
+      dest: /etc/named.conf
+      owner: root
+      group: root
+      mode: '0644'
+
+  - name: Copy zone file for ocp.cloud.lab
+    ansible.builtin.copy:
+      src: ~/ocp4-metal-install/build/dns/zones/
+      dest: /etc/named/
+      owner: named
+      group: named
+      mode: '0644'
+
+  - name: Copy dhcpd configuration file
+    ansible.builtin.copy:
+      src: ~/ocp4-metal-install/build/dhcp/dhcpd.conf
+      dest: /etc/dhcp/dhcpd.conf
+      owner: root
+      group: root
+      mode: '0644'
+
+  - name: Copy haproxy mgmt ingress configuration file
+    ansible.builtin.copy:
+      src: ~/ocp4-metal-install/build/haproxy-mgmt-ingress/haproxy.cfg
+      dest: /etc/haproxy/haproxy.cfg
+      owner: root
+      group: root
+      mode: '0644'
+
+  - name: Allow HAProxy to connect to any port (SELinux)
+    ansible.posix.seboolean:
+      name: haproxy_connect_any
+      state: true
+      persistent: yes
+
+  - name: Update Apache listen port
+    ansible.builtin.replace:
+      path: /etc/httpd/conf/httpd.conf
+      regexp: '^Listen\s+80$'
+      replace: 'Listen 0.0.0.0:8080'
+
+  - name: Configure NFS shares
+    ansible.builtin.file:
+      path: /shares/registry
+      state: directory
+      owner: nobody
+      group: nobody
+      mode: '0777'
+
+  - name: Store server IP in a variable
+    ansible.builtin.set_fact:
+      server_ip: "{{ ansible_default_ipv4.address }}"
+
+  - name: Configure NFS export for registry
+    ansible.builtin.lineinfile:
+      path: /etc/exports
+      line: "/shares/registry {{ server_ip }}/24(rw,sync,root_squash,no_subtree_check,no_wdelay)"
+      create: yes
+
+  - name: Reload NFS exports
+    ansible.builtin.command: exportfs -rv
+
   - name: Enable bash completion for oc
     ansible.builtin.shell: |
       echo 'source <(oc completion bash)' >> /etc/bashrc

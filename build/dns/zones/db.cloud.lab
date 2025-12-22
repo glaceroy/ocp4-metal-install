@@ -9,7 +9,8 @@ $TTL 1W
 ;
 ;
 utility.cloud.lab.          IN  A 10.10.0.1
-idp.cloud.lab.              IN  A 10.10.0.2
+idm.cloud.lab.              IN  A 10.10.0.2
+registry.cloud.lab.			IN  A 10.10.0.3
 ;
 api.ocp.cloud.lab.        	IN  A 10.10.0.1
 api-int.ocp.cloud.lab.    	IN  A 10.10.0.1

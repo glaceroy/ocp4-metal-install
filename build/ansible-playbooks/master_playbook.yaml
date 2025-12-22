@@ -1,0 +1,19 @@
+# master_playbook.yml
+- hosts: 127.0.0.1
+  connection: local
+  tasks:
+    - name: Install and Configure packages
+      ansible.builtin.include_playbook: install_packages.yaml
+
+    - name: Setup Firewall Zones and Masquerading
+      ansible.builtin.include_playbook: setup_firewall.yaml
+
+    - name: Configure Firewall Services
+      ansible.builtin.include_playbook: configure_firewall.yaml
+
+    - name: Setup Network Interfaces
+      ansible.builtin.include_playbook: setup_network_interface.yaml
+
+    - name: Restart Necessary Services
+      ansible.builtin.include_playbook: restart_services.yaml
+
