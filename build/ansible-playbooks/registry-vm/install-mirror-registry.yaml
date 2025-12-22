@@ -1,0 +1,81 @@
+---
+- hosts: registry.cloud.lab
+  become: true
+
+  vars:
+    registry_port: 5000
+    registry_data_dir: /opt/registry/data
+    registry_cert_dir: /etc/registry/certs
+    registry_image: registry:2
+    registry_service_name: local-registry
+
+  tasks:
+
+    - name: Install required packages
+      yum:
+        name:
+          - podman
+          - podman-docker
+          - firewall
+          - policycoreutils-python-utils  # for semanage
+        state: present
+
+    - name: Create registry data directory
+      file:
+        path: "{{ registry_data_dir }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Create registry cert directory
+      file:
+        path: "{{ registry_cert_dir }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Generate self-signed certificate for registry
+      command: >
+        openssl req -newkey rsa:4096 -nodes -keyout {{ registry_cert_dir }}/domain.key
+        -x509 -days 365 -out {{ registry_cert_dir }}/domain.crt
+        -subj "/CN=registry.cloud.lab/O=local"
+      args:
+        creates: "{{ registry_cert_dir }}/domain.crt"
+
+    - name: Set SELinux boolean to allow container registry access
+      ansible.builtin.command: setsebool -P container_manage_cgroup 1
+
+    - name: Open registry port in firewall
+      firewalld:
+        service: registry
+        permanent: yes
+        state: enabled
+        immediate: yes
+
+    - name: Pull registry image
+      command: podman pull registry:2
+
+    - name: Run local registry container
+      command: >
+        podman run -d --name local-registry
+        -p 5000:5000
+        -v /opt/registry/data:/var/lib/registry:z
+        -v /etc/registry/certs:/certs:z
+        -e REGISTRY_HTTP_TLS_CERTIFICATE=/certs/domain.crt
+        -e REGISTRY_HTTP_TLS_KEY=/certs/domain.key
+        --restart=always
+        registry:2
+      args:
+        creates: /opt/registry/data/registry_container_created
+
+
+    - name: Verify registry is listening
+      shell: "ss -tlnp | grep :{{ registry_port }}"
+      register: registry_listen
+      changed_when: false
+
+    - name: Display registry listening info
+      debug:
+        var: registry_listen.stdout_lines

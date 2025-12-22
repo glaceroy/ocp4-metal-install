@@ -1,0 +1,48 @@
+---
+- name: Install oc-mirror plugin
+  hosts: registry.cloud.lab
+  become: true
+  
+  vars:
+    oc_mirror_url: "https://example.com/path/to/oc-mirror.tar.gz"  # set to real URL
+    oc_mirror_archive: "/tmp/oc-mirror.tar.gz"
+    oc_mirror_dest_dir: "/usr/local/bin"
+
+  tasks:
+    - name: Download oc-mirror tarball
+      get_url:
+        url: "{{ oc_mirror_url }}"
+        dest: "{{ oc_mirror_archive }}"
+        mode: '0644'
+
+    - name: Extract oc-mirror binary
+      unarchive:
+        src: "{{ oc_mirror_archive }}"
+        dest: /tmp/oc-mirror-extracted
+        remote_src: true
+      register: oc_mirror_unarchive
+
+    - name: Find oc-mirror binary
+      find:
+        paths: /tmp/oc-mirror-extracted
+        patterns: "oc-mirror"
+        file_type: file
+      register: oc_mirror_find
+
+    - name: Fail if oc-mirror binary not found
+      fail:
+        msg: "oc-mirror binary not found in archive"
+      when: oc_mirror_find.matched == 0
+
+    - name: Install oc-mirror into PATH
+      copy:
+        src: "{{ oc_mirror_find.files[0].path }}"
+        dest: "{{ oc_mirror_dest_dir }}/oc-mirror"
+        mode: '0755'
+        owner: root
+        group: root
+
+    - name: Verify oc-mirror installation
+      command: oc mirror --help
+      register: oc_mirror_help
+      changed_when: false
