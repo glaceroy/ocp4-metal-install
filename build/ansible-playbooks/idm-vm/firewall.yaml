@@ -1,0 +1,24 @@
+---
+- hosts: 127.0.0.1
+  connection: local
+  become: true
+
+  vars:
+    firewalld_ports:
+      - { port: 8200/tcp, zone: internal }
+      - { port: 8200/tcp, zone: external }
+
+  tasks:
+    - name: Enable firewalld ports
+      ansible.posix.firewalld:
+        port: "{{ item.port }}"
+        state: enabled
+        zone: "{{ item.zone }}"
+        permanent: true
+      loop: "{{ firewalld_ports }}"
+
+    - name: Reload firewalld
+      ansible.builtin.systemd:
+        name: firewalld
+        state: reloaded
+

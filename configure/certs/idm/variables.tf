@@ -19,7 +19,7 @@ variable "vault_token" {
 variable "cert_file_name" {
   description = "The name of the certificate"
   type        = string
-  default     = "idp"
+  default     = "idm"
 }
 
 variable "backend" {
@@ -37,7 +37,7 @@ variable "role_name" {
 variable "cert_common_name" {
   description = "The common name for the certificate"
   type        = string
-  default     = "idp.cloud.lab"
+  default     = "idm.cloud.lab"
 }
 
 variable "cert_ip_sans" {

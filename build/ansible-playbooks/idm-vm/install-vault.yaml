@@ -1,0 +1,132 @@
+---
+- hosts: 127.0.0.1
+  connection: local
+  become: true
+
+  vars:
+    vault_version: "1.21.1"
+    vault_init_file: ~/ocp4-metal-install/configure/vault/vault-init.json
+    vault_config_dir: /etc/vault.d
+    vault_data_dir: /opt/vault/data
+    vault_host: "192.168.0.85"
+    vault_port: 8200
+    vault_cluster_address_port: 8201
+    vault_cluster_name: "ocp-vault"
+    node_id: "node1"
+
+  environment:
+    VAULT_ADDR: "http://{{ vault_host }}:{{ vault_port }}"
+
+  tasks:
+
+    - name: Install required packages
+      dnf:
+        name:
+          - dnf-utils
+          - curl
+          - unzip
+        state: present
+
+    - name: Add HashiCorp repository
+      get_url:
+        url: https://rpm.releases.hashicorp.com/RHEL/hashicorp.repo
+        dest: /etc/yum.repos.d/hashicorp.repo
+        mode: '0644'
+
+    - name: Install Vault
+      dnf:
+        name: vault-{{ vault_version }}
+        state: present
+
+    - name: Ensure Vault data directory is empty on first run
+      file:
+        path: "{{ vault_data_dir }}"
+        state: absent
+      when: not (vault_init_file is file)
+
+    - name: Recreate Vault data directory
+      file:
+        path: "{{ vault_data_dir }}"
+        state: directory
+        owner: vault
+        group: vault
+        mode: '0750'
+
+    - name: Create Vault configuration directory
+      file:
+        path: "{{ vault_config_dir }}"
+        state: directory
+        owner: vault
+        group: vault
+        mode: '0750'
+
+    - name: Configure Vault
+      copy:
+        dest: "{{ vault_config_dir }}/vault.hcl"
+        owner: vault
+        group: vault
+        mode: '0640'
+        content: |
+          disable_mlock = true
+          ui            = true
+          cluster_addr  = "https://{{ vault_host }}:{{ vault_cluster_address_port }}"
+          api_addr      = "http://{{ vault_host }}:{{ vault_port }}"
+          cluster_name  = "{{ vault_cluster_name }}"
+
+          storage "raft" {
+            path = "{{ vault_data_dir }}"
+            node_id = "{{ node_id }}"
+          }
+
+          listener "tcp" {
+            address     = "{{ vault_host }}:{{ vault_port }}"
+            tls_disable = true
+          }
+
+    - name: Enable and start Vault service
+      systemd:
+        name: vault
+        enabled: true
+        state: started
+
+    - name: Wait for Vault to become ready
+      wait_for:
+        host: "{{ vault_host }}"
+        port: "{{ vault_port }}"
+        state: started
+        timeout: 30
+
+    - name: Check if Vault init file exists
+      stat:
+        path: "{{ vault_init_file }}"
+      register: vault_init_stat
+
+    - name: DEBUG init file existence
+      debug:
+        msg: "Vault init file exists: {{ vault_init_stat.stat.exists }}"
+
+    - name: Initialize Vault (FIRST RUN ONLY)
+      command: >
+        vault operator init
+        -key-shares=5
+        -key-threshold=3
+        -format=json
+      environment:
+        VAULT_ADDR: "http://{{ vault_host }}:{{ vault_port }}"
+      register: vault_init
+      when: not vault_init_stat.stat.exists
+
+    - name: Save Vault init output securely
+      copy:
+        content: "{{ vault_init.stdout }}"
+        dest: "{{ vault_init_file }}"
+        owner: root
+        group: root
+        mode: '0600'
+      when: vault_init is defined and vault_init.stdout is defined
+
+    - name: Display Vault initialization result
+      debug:
+        var: vault_init.stdout
+      when: vault_init is defined and vault_init.stdout is defined
+
