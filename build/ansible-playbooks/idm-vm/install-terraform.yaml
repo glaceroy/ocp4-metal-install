@@ -1,0 +1,61 @@
+---
+- hosts: 127.0.0.1
+  connection: local
+  become: true
+
+  vars:
+    terraform_version: "1.14.3"           # desired Terraform version
+    terraform_download_dir: "/tmp"        # temporary download directory
+    terraform_install_path: "/usr/local/bin/terraform"
+
+  tasks:
+    - name: Install required packages
+      dnf:
+        name:
+          - curl
+          - unzip
+        state: present
+
+    - name: Check if Terraform is installed
+      command: terraform version -json
+      register: terraform_check
+      failed_when: false
+      changed_when: false
+
+    - name: Set current Terraform version
+      set_fact:
+        terraform_current_version: "{{ (terraform_check.stdout | from_json).terraform_version if terraform_check.rc == 0 else '0.0.0' }}"
+
+    - name: Debug current Terraform version
+      debug:
+        msg: "Current Terraform version is {{ terraform_current_version }}"
+
+    - name: Download Terraform binary if needed
+      get_url:
+        url: "https://releases.hashicorp.com/terraform/{{ terraform_version }}/terraform_{{ terraform_version }}_linux_amd64.zip"
+        dest: "{{ terraform_download_dir }}/terraform_{{ terraform_version }}.zip"
+        mode: '0644'
+      when: terraform_current_version is version(terraform_version, '<')
+
+    - name: Unzip Terraform binary
+      unarchive:
+        src: "{{ terraform_download_dir }}/terraform_{{ terraform_version }}.zip"
+        dest: "{{ terraform_download_dir }}"
+        remote_src: yes
+      when: terraform_current_version is version(terraform_version, '<')
+
+    - name: Move Terraform binary to /usr/local/bin
+      copy:
+        src: "{{ terraform_download_dir }}/terraform"
+        dest: "{{ terraform_install_path }}"
+        mode: '0755'
+      when: terraform_current_version is version(terraform_version, '<')
+
+    - name: Verify Terraform installation
+      command: terraform version
+      register: terraform_version_output
+      changed_when: false
+
+    - name: Show Terraform version
+      debug:
+        var: terraform_version_output.stdout
