@@ -79,15 +79,15 @@
           }
 
           listener "tcp" {
-            address     = "{{ vault_host }}:{{ vault_port }}"
+            address     = "0.0.0.0:{{ vault_port }}"
             tls_disable = true
           }
 
-    - name: Enable and start Vault service
+    - name: Enable and Restart Vault service
       systemd:
         name: vault
         enabled: true
-        state: started
+        state: restarted
 
     - name: Wait for Vault to become ready
       wait_for:
@@ -118,7 +118,7 @@
 
     - name: Save Vault init output securely
       copy:
-        content: "{{ vault_init.stdout }}"
+        content: "{{ vault_init.stdout | from_json | to_nice_json }}"
         dest: "{{ vault_init_file }}"
         owner: root
         group: root

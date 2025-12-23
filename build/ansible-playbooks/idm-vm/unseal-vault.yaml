@@ -1,0 +1,39 @@
+---
+- hosts: 127.0.0.1
+  connection: local
+  become: true
+
+  vars:
+    vault_init_file: ~/ocp4-metal-install/configure/vault/vault-init.json
+    vault_host: "192.168.0.85"
+    vault_port: 8200
+
+  tasks:
+
+    - name: Load Vault init keys
+      set_fact:
+        vault_init_data: "{{ lookup('file', vault_init_file) | from_json }}"
+
+    - name: Check Vault sealed status
+      command: vault status -format=json
+      register: vault_status
+      failed_when: false
+      changed_when: false
+      environment:
+        VAULT_ADDR: "http://{{ vault_host }}:{{ vault_port }}"
+
+    - name: Set fact if Vault is sealed
+      set_fact:
+        vault_sealed: "{{ (vault_status.stdout | length > 0) and ((vault_status.stdout | from_json).sealed) }}"
+
+    - name: DEBUG Vault sealed status
+      debug:
+        msg:
+          - "Vault sealed={{ vault_sealed }}"
+
+    - name: Unseal Vault if sealed
+      command: vault operator unseal {{ item }}
+      loop: "{{ vault_init_data.unseal_keys_b64[:vault_init_data.unseal_threshold] }}"
+      environment:
+        VAULT_ADDR: "http://{{ vault_host }}:{{ vault_port }}"
+      when: vault_sealed

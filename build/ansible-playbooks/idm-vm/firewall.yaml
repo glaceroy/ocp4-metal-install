@@ -5,20 +5,16 @@
 
   vars:
     firewalld_ports:
-      - { port: 8200/tcp, zone: internal }
-      - { port: 8200/tcp, zone: external }
+      - { port: "8200/tcp" } # Vault UI Port
 
   tasks:
     - name: Enable firewalld ports
       ansible.posix.firewalld:
         port: "{{ item.port }}"
         state: enabled
-        zone: "{{ item.zone }}"
         permanent: true
+        immediate: yes
       loop: "{{ firewalld_ports }}"
 
     - name: Reload firewalld
-      ansible.builtin.systemd:
-        name: firewalld
-        state: reloaded
-
+      command: firewall-cmd --reload
