@@ -15,9 +15,9 @@ resource "vault_mount" "pki_intermediate" {
 resource "vault_pki_secret_backend_config_urls" "config_urls_int" {
   depends_on = [ vault_mount.pki_intermediate ]  
   backend              = vault_mount.pki_intermediate.path
-  issuing_certificates = ["http://192.168.0.25/v1/${vault_mount.pki_intermediate.path}/ca"]
-  crl_distribution_points= ["http://192.168.0.25/v1/${vault_mount.pki_intermediate.path}/crl"]
-  ocsp_servers = ["http://192.168.0.25/v1/${vault_mount.pki_intermediate.path}/ocsp"]
+  issuing_certificates = ["http://192.168.0.85/v1/${vault_mount.pki_intermediate.path}/ca"]
+  crl_distribution_points= ["http://192.168.0.85/v1/${vault_mount.pki_intermediate.path}/crl"]
+  ocsp_servers = ["http://192.168.0.85/v1/${vault_mount.pki_intermediate.path}/ocsp"]
 }
 
 #########################################################

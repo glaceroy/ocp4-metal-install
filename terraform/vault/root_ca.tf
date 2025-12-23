@@ -15,9 +15,9 @@ resource "vault_mount" "root" {
 resource "vault_pki_secret_backend_config_urls" "config_urls" {
   depends_on = [ vault_mount.root ]  
   backend              = vault_mount.root.path
-  issuing_certificates = ["http://192.168.0.25/v1/${vault_mount.root.path}/ca"]
-  crl_distribution_points= ["http://192.168.0.25/v1/${vault_mount.root.path}/crl"]
-  ocsp_servers = ["http://192.168.0.25/v1/${vault_mount.root.path}/ocsp"]
+  issuing_certificates = ["http://192.168.0.85/v1/${vault_mount.root.path}/ca"]
+  crl_distribution_points= ["http://192.168.0.85/v1/${vault_mount.root.path}/crl"]
+  ocsp_servers = ["http://192.168.0.85/v1/${vault_mount.root.path}/ocsp"]
 }
 
 # if you want to create the root cert in VAULT and never expose the 

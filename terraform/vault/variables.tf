@@ -4,7 +4,7 @@
 variable "vault_address" {
   description = "The address of the Vault server"
   type        = string
-  default     = "http://192.168.0.25:8200/"
+  default     = "http://192.168.0.85:8200/"
 }
 
 variable "vault_token" {
