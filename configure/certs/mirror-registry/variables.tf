@@ -19,7 +19,7 @@ variable "vault_token" {
 variable "cert_file_name" {
   description = "The name of the certificate"
   type        = string
-  default     = "idm"
+  default     = "mirror-registry"
 }
 
 variable "backend" {
@@ -37,13 +37,13 @@ variable "role_name" {
 variable "cert_common_name" {
   description = "The common name for the certificate"
   type        = string
-  default     = "idm.cloud.lab"
+  default     = "registry.cloud.lab"
 }
 
 variable "cert_ip_sans" {
   description = "The IP Subject Alternative Names for the certificate"
   type        = list(string)
-  default     = ["192.168.0.85"]  
+  default     = ["192.168.0.88"]  
 }
 
 variable "revoke" {

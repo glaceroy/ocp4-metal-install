@@ -4,7 +4,7 @@
 variable "vault_address" {
   description = "The address of the Vault server"
   type        = string
-  default     = "http://192.168.0.25:8200/"
+  default     = "http://192.168.0.85:8200/"
 }
 
 variable "vault_token" {
@@ -48,7 +48,7 @@ variable "alt_names" {
 variable "cert_ip_sans" {
   description = "The IP Subject Alternative Names for the certificate"
   type        = list(string)
-  default     = ["192.168.0.42"]  
+  default     = ["192.168.0.79"]  
 }
 
 variable "revoke" {
