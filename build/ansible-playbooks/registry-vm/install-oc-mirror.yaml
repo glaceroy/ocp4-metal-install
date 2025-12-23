@@ -1,0 +1,84 @@
+---
+- name: Verify and install oc-mirror
+  hosts: 127.0.0.1
+  connection: local
+  become: true
+
+  vars:
+    ocp_release: "4.18.30"
+    oc_mirror_url: "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/{{ ocp_release }}/oc-mirror.tar.gz"
+
+    install_dir: /usr/local/bin
+    work_dir: /opt/oc-mirror
+    oc_mirror_bin: "{{ install_dir }}/oc-mirror"
+
+  tasks:
+
+  - name: Ensure required packages are installed
+    dnf:
+      name:
+        - curl
+        - tar
+      state: present
+
+  - name: Create working directory
+    file:
+      path: "{{ work_dir }}"
+      state: directory
+      mode: '0755'
+
+  # --------------------------------------------------
+  # Check if oc-mirror is installed (DO NOT parse version)
+  # --------------------------------------------------
+  - name: Check if oc-mirror exists
+    command: "{{ oc_mirror_bin }} --help"
+    register: oc_mirror_check
+    failed_when: false
+    changed_when: false
+
+  - name: Determine if oc-mirror install is required
+    set_fact:
+      oc_mirror_install_needed: "{{ oc_mirror_check.rc != 0 }}"
+
+  - name: Debug install decision
+    debug:
+      msg:
+        - "oc-mirror present: {{ oc_mirror_check.rc == 0 }}"
+        - "Install needed: {{ oc_mirror_install_needed }}"
+
+  # --------------------------------------------------
+  # Install oc-mirror (idempotent)
+  # --------------------------------------------------
+  - name: Download oc-mirror archive
+    get_url:
+      url: "{{ oc_mirror_url }}"
+      dest: "{{ work_dir }}/oc-mirror.tar.gz"
+      mode: '0644'
+    when: oc_mirror_install_needed
+
+  - name: Extract oc-mirror archive
+    unarchive:
+      src: "{{ work_dir }}/oc-mirror.tar.gz"
+      dest: "{{ work_dir }}"
+      remote_src: yes
+    when: oc_mirror_install_needed
+
+  - name: Install oc-mirror binary
+    copy:
+      src: "{{ work_dir }}/oc-mirror"
+      dest: "{{ oc_mirror_bin }}"
+      mode: '0755'
+      remote_src: yes
+    when: oc_mirror_install_needed
+
+  # --------------------------------------------------
+  # Verification (use supported flags)
+  # --------------------------------------------------
+  - name: Verify oc-mirror installation (v2)
+    command: "{{ oc_mirror_bin }} --v2 version"
+    register: oc_mirror_final
+    changed_when: false
+
+  - name: Show oc-mirror version
+    debug:
+      var: oc_mirror_final.stdout

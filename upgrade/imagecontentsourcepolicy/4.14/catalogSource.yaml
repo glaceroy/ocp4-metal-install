@@ -1,0 +1,26 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  name: cs-redhat-operator-index
+  namespace: openshift-marketplace
+spec:
+  image: utility.cloud.lab:8443/redhat/redhat-operator-index:v4.16..1
+  sourceType: grpc
+---
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  name: cs-certified-operator-index
+  namespace: openshift-marketplace
+spec:
+  image: utility.cloud.lab:8443/redhat/certified-operator-index:v4.16.1
+  sourceType: grpc
+---
+apiVersion: updateservice.operator.openshift.io/v1
+kind: UpdateService
+metadata:
+  name: update-service-oc-mirror
+spec:
+  graphDataImage: utility.cloud.lab:8443/openshift/graph-image@sha256:6b00243a5bf2cf0e4d01bf24b722c2b405ebe210ffc526f1f732c7354bed3ef8
+  releases: utility.cloud.lab:8443/openshift/release-images
+  replicas: 2

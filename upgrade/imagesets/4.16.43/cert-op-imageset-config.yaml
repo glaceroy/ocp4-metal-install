@@ -1,0 +1,19 @@
+kind: ImageSetConfiguration
+apiVersion: mirror.openshift.io/v1alpha2
+storageConfig:
+  registry:
+    imageURL: utility.cloud.lab:8443/mirror/oc-mirror-metadata-cert-ops-4.16 # Local mirror registry URL
+    skipTLS: false
+mirror:                     # This parameter will be useful when updating the cluster in disconnected setup with OSUS operator
+  operators:
+  - catalog: registry.redhat.io/redhat/certified-operator-index:v4.16 # Version of the operators catalog to be mirrored. 
+    targetName: 'certified-operator-index'
+    targetTag: 'v4.16.1'
+    packages:
+    - name: vault-secrets-operator
+      channels:
+      - name: stable
+        minVersion: '0.10.0'
+        maxVersion: '0.10.0'
+  additionalImages:
+  helm: {}

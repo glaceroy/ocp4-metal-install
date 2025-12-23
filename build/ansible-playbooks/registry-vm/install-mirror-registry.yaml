@@ -4,14 +4,19 @@
   become: true
 
   vars:
-    oc_mirror_version: "1.3.11"   # desired oc-mirror version
+    oc_mirror_version: "1.3.11"
     download_dir: "/root"
-    mirror_binary_path: "{{ download_dir }}/mirror-registry"
-    sslCert_path: "~/ocp4-metal-install/configure/certs/mirror-registry/certs/mirror-registry.crt"
-    sslKey_path: "~/ocp4-metal-install/configure/certs/mirror-registry/certs/mirror-registry.key"
-    registry_creds_file: "~/ocp4-metal-install/build/ansible-playbooks/registry-vm/registry-credentials.yaml"
+    mirror_binary_path: "/root/mirror-registry"
+    mirror_workdir: "/opt/mirror-registry"
+
+    sslCert_path: "/root/ocp4-metal-install/configure/certs/mirror-registry/certs/mirror-registry.crt"
+    sslKey_path: "/root/ocp4-metal-install/configure/certs/mirror-registry/certs/mirror-registry.key"
+
+    registry_creds_dir: "/root/ocp4-metal-install/build/ansible-playbooks/registry-vm"
+    registry_creds_file: "{{ registry_creds_dir }}/registry-credentials.yaml"
 
   tasks:
+
     - name: Ensure required packages are installed
       yum:
         name:
@@ -19,7 +24,7 @@
           - tar
         state: present
 
-    - name: Check if oc-mirror is already installed
+    - name: Check if mirror-registry binary is installed
       command: "{{ mirror_binary_path }} --version"
       register: mirror_installed
       ignore_errors: true
@@ -29,77 +34,100 @@
       set_fact:
         installed_version: "{{ mirror_installed.stdout | regex_search('[0-9]+\\.[0-9]+\\.[0-9]+') | default('0.0.0') }}"
 
-    - name: Set install_needed flag
+    - name: Determine if install is needed
       set_fact:
         install_needed: "{{ mirror_installed.rc != 0 or (installed_version is version(oc_mirror_version, '<')) }}"
 
-    - name: Download OpenShift oc-mirror binary
-      ansible.builtin.get_url:
+    - name: Create mirror-registry working directory
+      file:
+        path: "{{ mirror_workdir }}"
+        state: directory
+        mode: '0755'
+      when: install_needed
+
+    - name: Download mirror-registry tarball
+      get_url:
         url: "https://developers.redhat.com/content-gateway/file/pub/openshift-v4/clients/mirror-registry/{{ oc_mirror_version }}/mirror-registry.tar.gz"
         dest: "{{ download_dir }}/mirror-registry.tar.gz"
         mode: '0644'
       when: install_needed
 
-    - name: Extract oc-mirror tarball
-      ansible.builtin.unarchive:
+    - name: Extract mirror-registry binary
+      unarchive:
         src: "{{ download_dir }}/mirror-registry.tar.gz"
-        dest: "{{ download_dir }}/"
+        dest: "{{ download_dir }}"
         remote_src: yes
         mode: '0755'
       when: install_needed
 
-    - name: Verify oc-mirror installation
-      command: "{{ mirror_binary_path }} --version"
-      register: mirror_version
-      changed_when: false
+    - name: Verify mirror-registry binary exists
+      stat:
+        path: "{{ mirror_binary_path }}"
+      register: mirror_binary_stat
 
-    - name: Show oc-mirror version
-      debug:
-        var: mirror_version.stdout_lines
+    - name: Fail if mirror-registry binary is missing
+      fail:
+        msg: "mirror-registry binary not found after extraction"
+      when: not mirror_binary_stat.stat.exists
 
-    - name: Set registry hostname
-      command: "hostname -f"
+    - name: Get FQDN
+      command: hostname -f
       register: hostname_result
 
-    - name: Check if registry credentials file exists
+    - name: Check if registry credentials already exist
       stat:
         path: "{{ registry_creds_file }}"
       register: creds_file
 
-    - name: Install mirror registry (if not already installed)
-      command: >
-        "{{ mirror_binary_path }} install
-        --quayHostname {{ hostname_result.stdout }}
-        --sslCert {{ sslCert_path }}
-        --sslKey {{ sslKey_path }}"
+    - name: Install mirror registry (FIRST RUN ONLY)
+      command:
+        argv:
+          - "{{ mirror_binary_path }}"
+          - install
+          - --quayHostname
+          - "{{ hostname_result.stdout }}"
+          - --sslCert
+          - "{{ sslCert_path }}"
+          - --sslKey
+          - "{{ sslKey_path }}"
+      args:
+        chdir: "{{ mirror_workdir }}"
       register: mirror_install
-      ignore_errors: false
-      when: not creds_file.stat.exists
+      when:
+        - install_needed
+        - not creds_file.stat.exists
 
-    - name: Capture registry credentials from install output
+    - name: Parse registry credentials
       set_fact:
-        registry_creds: >-
-          {{
-            {
-              "url": (mirror_install.stdout | regex_search('https://\\S+')),
-              "username": "init",
-              "password": (mirror_install.stdout | regex_search('Credentials \\(init, (\\S+)\\)', '\\1'))
-            }
-          }}
+        registry_creds:
+          url: "{{ mirror_install.stdout | regex_search('https://[^ ]+') }}"
+          username: "init"
+          password: "{{ mirror_install.stdout | regex_search('\\(init, ([^)]+)\\)', '\\1') }}"
       when:
         - mirror_install is defined
         - mirror_install.stdout is defined
 
-    - name: Save registry credentials to file
+    - name: Fail if credentials could not be parsed
+      fail:
+        msg: "Failed to extract registry credentials from mirror-registry output"
+      when:
+        - mirror_install is defined
+        - registry_creds.password is not defined
+
+    - name: Ensure credentials directory exists
+      file:
+        path: "{{ registry_creds_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Save registry credentials securely
       copy:
         content: "{{ registry_creds | to_nice_yaml }}"
         dest: "{{ registry_creds_file }}"
-        owner: root
-        group: root
         mode: '0600'
       when: registry_creds is defined
 
-    - name: Display registry credentials
+    - name: Display registry credentials (ONCE)
       debug:
         var: registry_creds
       when: registry_creds is defined
