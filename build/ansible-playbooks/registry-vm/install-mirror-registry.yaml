@@ -2,13 +2,14 @@
 - hosts: 127.0.0.1
   connection: local
   become: true
-  
+
   vars:
-    oc_mirror_version: "1.3.11"   # desired version
+    oc_mirror_version: "1.3.11"   # desired oc-mirror version
     download_dir: "/root"
     mirror_binary_path: "{{ download_dir }}/mirror-registry"
-    sslCert_path: "~/ocp4-metal-install/configure/certs/mirror-registry/certs/mirror-registry.crt"  
-    sslKey_path: "~/ocp4-metal-install/configure/certs/mirror-registry/certs/mirror-registry.key"    
+    sslCert_path: "~/ocp4-metal-install/configure/certs/mirror-registry/certs/mirror-registry.crt"
+    sslKey_path: "~/ocp4-metal-install/configure/certs/mirror-registry/certs/mirror-registry.key"
+    registry_creds_file: "~/ocp4-metal-install/build/ansible-playbooks/registry-vm/registry-credentials.yaml"
 
   tasks:
     - name: Ensure required packages are installed
@@ -60,11 +61,45 @@
       command: "hostname -f"
       register: hostname_result
 
-    - name: Install mirror registry
-      command: "{{ download_dir }}/mirror-registry install --quayHostname {{ hostname_result.stdout }} --sslCert {{ sslCert_path }} --sslKey {{ sslKey_path }}"
+    - name: Check if registry credentials file exists
+      stat:
+        path: "{{ registry_creds_file }}"
+      register: creds_file
+
+    - name: Install mirror registry (if not already installed)
+      command: >
+        "{{ mirror_binary_path }} install
+        --quayHostname {{ hostname_result.stdout }}
+        --sslCert {{ sslCert_path }}
+        --sslKey {{ sslKey_path }}"
       register: mirror_install
       ignore_errors: false
+      when: not creds_file.stat.exists
 
-    - name: Show mirror install output
-      debug: 
-        var: mirror_install.stdout_lines
+    - name: Capture registry credentials from install output
+      set_fact:
+        registry_creds: >-
+          {{
+            {
+              "url": (mirror_install.stdout | regex_search('https://\\S+')),
+              "username": "init",
+              "password": (mirror_install.stdout | regex_search('Credentials \\(init, (\\S+)\\)', '\\1'))
+            }
+          }}
+      when:
+        - mirror_install is defined
+        - mirror_install.stdout is defined
+
+    - name: Save registry credentials to file
+      copy:
+        content: "{{ registry_creds | to_nice_yaml }}"
+        dest: "{{ registry_creds_file }}"
+        owner: root
+        group: root
+        mode: '0600'
+      when: registry_creds is defined
+
+    - name: Display registry credentials
+      debug:
+        var: registry_creds
+      when: registry_creds is defined
