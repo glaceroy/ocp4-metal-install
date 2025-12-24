@@ -1,0 +1,49 @@
+$TTL 1W
+$ORIGIN 0.10.10.in-addr.arpa.
+
+@   IN  SOA utility.cloud.lab. root (
+        2019070700      ; serial
+        3H              ; refresh
+        30M             ; retry
+        2W              ; expire
+        1W              ; minimum
+)
+
+    IN  NS  utility.cloud.lab.
+
+; --------------------------------------------------
+; Infrastructure
+; --------------------------------------------------
+
+1   IN  PTR utility.cloud.lab.
+2   IN  PTR idm.cloud.lab.
+3   IN  PTR registry.cloud.lab.
+
+; --------------------------------------------------
+; OpenShift API
+; --------------------------------------------------
+
+1   IN  PTR api.ocp.cloud.lab.
+1   IN  PTR api-int.ocp.cloud.lab.
+
+; --------------------------------------------------
+; OpenShift bootstrap & control plane
+; --------------------------------------------------
+
+200 IN  PTR bootstrap.ocp.cloud.lab.
+
+201 IN  PTR master01.ocp.cloud.lab.
+202 IN  PTR master02.ocp.cloud.lab.
+203 IN  PTR master03.ocp.cloud.lab.
+
+; --------------------------------------------------
+; OpenShift workers
+; --------------------------------------------------
+
+211 IN  PTR worker01.ocp.cloud.lab.
+212 IN  PTR worker02.ocp.cloud.lab.
+213 IN  PTR worker03.ocp.cloud.lab.
+214 IN  PTR worker04.ocp.cloud.lab.
+215 IN  PTR worker05.ocp.cloud.lab.
+
+; EOF

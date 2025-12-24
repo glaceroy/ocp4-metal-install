@@ -1,36 +1,44 @@
-$TTL 1W
+$TTL 1H
+
 @   IN  SOA utility.cloud.lab. root (
-        2019070700      ; serial
-        3H              ; refresh (3 hours)
-        30M             ; retry (30 minutes)
-        2W              ; expiry (2 weeks)
-        1W )            ; minimum (1 week)
+        2025122401      ; serial
+        3H              ; refresh
+        30M             ; retry
+        2W              ; expire
+        1W              ; minimum
+)
+
     IN  NS  utility.cloud.lab.
+    IN  A   10.10.0.1
 
+; ----------------------------------------------------------------------
 ; Host A records
-utility.cloud.lab.             IN  A   10.10.0.1
-idm.cloud.lab.                 IN  A   10.10.0.2
-registry.cloud.lab.            IN  A   10.10.0.3
+; ----------------------------------------------------------------------
 
-api.ocp.cloud.lab.             IN  A   10.10.0.1
-api-int.ocp.cloud.lab.         IN  A   10.10.0.1
+proxmox.cloud.lab.                     IN  A   192.168.0.100
 
-*.apps.ocp.cloud.lab.          IN  A   10.10.0.1
+utility.cloud.lab.                     IN  A   10.10.0.1
+idm.cloud.lab.                         IN  A   10.10.0.2
+registry.cloud.lab.                    IN  A   10.10.0.3
 
-nginx-shard.ocp.cloud.lab.     IN  A   10.10.0.2
+api.ocp.cloud.lab.                     IN  A   10.10.0.1
+api-int.ocp.cloud.lab.                 IN  A   10.10.0.1
 
-bookinfo-development.ocp.cloud.lab. IN  A   10.10.0.2
+*.apps.ocp.cloud.lab.                  IN  A   10.10.0.1
 
-bootstrap.ocp.cloud.lab.       IN  A   10.10.0.200
+nginx-shard.ocp.cloud.lab.             IN  A   10.10.0.2
+bookinfo-development.ocp.cloud.lab.    IN  A   10.10.0.2
 
-master01.ocp.cloud.lab.        IN  A   10.10.0.201
-master02.ocp.cloud.lab.        IN  A   10.10.0.202
-master03.ocp.cloud.lab.        IN  A   10.10.0.203
+bootstrap.ocp.cloud.lab.               IN  A   10.10.0.200
 
-worker01.ocp.cloud.lab.        IN  A   10.10.0.211
-worker02.ocp.cloud.lab.        IN  A   10.10.0.212
-worker03.ocp.cloud.lab.        IN  A   10.10.0.213
-worker04.ocp.cloud.lab.        IN  A   10.10.0.214
-worker05.ocp.cloud.lab.        IN  A   10.10.0.215
+master01.ocp.cloud.lab.                IN  A   10.10.0.201
+master02.ocp.cloud.lab.                IN  A   10.10.0.202
+master03.ocp.cloud.lab.                IN  A   10.10.0.203
+
+worker01.ocp.cloud.lab.                IN  A   10.10.0.211
+worker02.ocp.cloud.lab.                IN  A   10.10.0.212
+worker03.ocp.cloud.lab.                IN  A   10.10.0.213
+worker04.ocp.cloud.lab.                IN  A   10.10.0.214
+worker05.ocp.cloud.lab.                IN  A   10.10.0.215
 
 ; EOF

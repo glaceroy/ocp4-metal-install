@@ -1,6 +1,7 @@
 ---
 - hosts: 127.0.0.1
   connection: local
+  become: yes
   
   vars:
     files_source_path: ~/ocp4-metal-install/build/
@@ -136,7 +137,8 @@
         force: yes
       loop:
         - db.cloud.lab
-        - db.reverse
+        - db.0.10.10
+        - db.0.168.192
       loop_control:
         label: "{{ item }}"
 
@@ -167,6 +169,7 @@
         path: /etc/httpd/conf/httpd.conf
         regexp: '^Listen\s+80$'
         replace: 'Listen 0.0.0.0:8080'
+      notify: restart httpd
 
     - name: Configure NFS shares
       ansible.builtin.file:
@@ -189,6 +192,7 @@
 
     - name: Reload NFS exports
       ansible.builtin.command: exportfs -rv
+      become: yes
 
     ###############################
     # Validate DNS configuration
@@ -197,6 +201,10 @@
       command: named-checkzone cloud.lab /etc/named/zones/db.cloud.lab
       changed_when: false
 
-    - name: Validate reverse zone
-      command: named-checkzone 0.10.10.in-addr.arpa /etc/named/zones/db.reverse
+    - name: Validate reverse zone - 10.10.0
+      command: named-checkzone 0.10.10.in-addr.arpa /etc/named/zones/db.0.10.10
+      changed_when: false
+
+    - name: Validate reverse zone - 192.168.0
+      command: named-checkzone 0.168.192.in-addr.arpa /etc/named/zones/db.0.168.192
       changed_when: false
