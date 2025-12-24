@@ -28,7 +28,7 @@
       mode: '0755'
 
   # --------------------------------------------------
-  # Check if oc-mirror is installed (DO NOT parse version)
+  # Check if oc-mirror is installed
   # --------------------------------------------------
   - name: Check if oc-mirror exists
     command: "{{ oc_mirror_bin }} --help"
@@ -72,7 +72,22 @@
     when: oc_mirror_install_needed
 
   # --------------------------------------------------
-  # Verification (use supported flags)
+  # Cleanup (ONLY after install)
+  # --------------------------------------------------
+  - name: Remove oc-mirror tarball
+    file:
+      path: "{{ work_dir }}/oc-mirror.tar.gz"
+      state: absent
+    when: oc_mirror_install_needed
+
+  - name: Remove extracted oc-mirror binary from workdir
+    file:
+      path: "{{ work_dir }}/oc-mirror"
+      state: absent
+    when: oc_mirror_install_needed
+
+  # --------------------------------------------------
+  # Verification (supported flags)
   # --------------------------------------------------
   - name: Verify oc-mirror installation (v2)
     command: "{{ oc_mirror_bin }} --v2 version"

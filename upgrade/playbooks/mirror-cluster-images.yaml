@@ -1,0 +1,90 @@
+---
+- name: Mirror OpenShift images (mirror-to-mirror) using oc-mirror v2
+  hosts: 127.0.0.1
+  connection: local
+  become: true
+
+  vars:
+    oc_mirror_bin: /usr/local/bin/oc-mirror
+    work_dir: /opt/oc-mirror
+    workspace_dir: "{{ work_dir }}/mirror-workspace"
+    imageset_config: "{{ work_dir }}/ocp-imageset-config.yaml"
+    pull_secret: /root/pull-secret.json
+
+    mirror_registry_src: "file://{{ workspace_dir }}"     # source mirror
+    mirror_registry_dst: "docker://registry.cloud.lab:8443"  # target mirror
+
+  tasks:
+
+  # -----------------------------------
+  # Pre-flight checks
+  # -----------------------------------
+  - name: Ensure working directory exists
+    file:
+      path: "{{ work_dir }}"
+      state: directory
+      mode: '0755'
+
+  - name: Ensure workspace directory exists
+    file:
+      path: "{{ workspace_dir }}"
+      state: directory
+      mode: '0755'
+
+  - name: Verify pull-secret exists
+    stat:
+      path: "{{ pull_secret }}"
+    register: pull_secret_stat
+
+  - name: Fail if pull-secret is missing
+    fail:
+      msg: "pull-secret.json not found at {{ pull_secret }}"
+    when: not pull_secret_stat.stat.exists
+
+  - name: Verify ImageSetConfiguration exists
+    stat:
+      path: "{{ imageset_config }}"
+    register: imageset_stat
+
+  - name: Fail if ImageSetConfiguration is missing
+    fail:
+      msg: "ImageSetConfiguration not found at {{ imageset_config }}"
+    when: not imageset_stat.stat.exists
+
+  # -----------------------------------
+  # Mirror-to-mirror workflow
+  # -----------------------------------
+  - name: Prepare mirror workspace
+    command: >
+      {{ oc_mirror_bin }}
+      --v2
+      --config {{ imageset_config }}
+      {{ mirror_registry_src }}
+    args:
+      chdir: "{{ work_dir }}"
+    register: mirror_prepare
+    changed_when: "'Workspace prepared' in mirror_prepare.stdout"
+    failed_when: mirror_prepare.rc != 0
+
+  - name: Show workspace preparation output
+    debug:
+      var: mirror_prepare.stdout_lines
+
+  - name: Push workspace to remote registry
+    environment:
+      REGISTRY_AUTH_FILE: "{{ pull_secret }}"
+    command: >
+      {{ oc_mirror_bin }}
+      --v2
+      --config {{ imageset_config }}
+      --workspace {{ mirror_registry_src }}
+      {{ mirror_registry_dst }}
+    args:
+      chdir: "{{ work_dir }}"
+    register: mirror_push
+    changed_when: "'Pushed' in mirror_push.stdout"
+    failed_when: mirror_push.rc != 0
+
+  - name: Show mirror push output
+    debug:
+      var: mirror_push.stdout_lines
