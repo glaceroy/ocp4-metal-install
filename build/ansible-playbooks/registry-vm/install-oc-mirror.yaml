@@ -5,15 +5,23 @@
   become: true
 
   vars:
+    # -------------------
+    # Versions & URLs
+    # -------------------
     ocp_release: "4.18.30"
     oc_mirror_url: "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/{{ ocp_release }}/oc-mirror.tar.gz"
 
+    # -------------------
+    # Installation paths
+    # -------------------
     install_dir: /usr/local/bin
     work_dir: /opt/oc-mirror
     oc_mirror_bin: "{{ install_dir }}/oc-mirror"
 
   tasks:
-
+  # --------------------------------------------------
+  # Ensure required packages
+  # --------------------------------------------------
   - name: Ensure required packages are installed
     dnf:
       name:
@@ -96,4 +104,4 @@
 
   - name: Show oc-mirror version
     debug:
-      var: oc_mirror_final.stdout
+      var: oc_mirror_final.stdout_lines

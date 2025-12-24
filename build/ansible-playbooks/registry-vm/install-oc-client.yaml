@@ -1,0 +1,115 @@
+---
+- name: Install OpenShift oc client
+  hosts: 127.0.0.1
+  connection: local
+  become: true
+
+  vars:
+    # -------------------
+    # Versions & URLs
+    # -------------------
+    oc_version: "4.18.30"
+    oc_url: "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/{{ oc_version }}/openshift-client-linux.tar.gz"
+
+    # -------------------
+    # Installation paths
+    # -------------------
+    install_dir: /usr/local/bin
+    work_dir: /opt/oc-client
+    oc_bin: "{{ install_dir }}/oc"
+
+  tasks:
+  # --------------------------------------------------
+  # Ensure required packages
+  # --------------------------------------------------
+  - name: Ensure required packages are installed
+    dnf:
+      name:
+        - curl
+        - tar
+      state: present
+
+  - name: Create working directory
+    file:
+      path: "{{ work_dir }}"
+      state: directory
+      mode: '0755'
+
+  # --------------------------------------------------
+  # Check if oc client is installed
+  # --------------------------------------------------
+  - name: Check if oc client exists
+    command: "{{ oc_bin }} version --client"
+    register: oc_check
+    failed_when: false
+    changed_when: false
+
+  - name: Determine if oc install is required
+    set_fact:
+      oc_install_needed: "{{ oc_check.rc != 0 }}"
+
+  # --------------------------------------------------
+  # Download and Install oc client (idempotent)
+  # --------------------------------------------------
+  - name: Download oc client archive
+    get_url:
+      url: "{{ oc_url }}"
+      dest: "{{ work_dir }}/openshift-client.tar.gz"
+      mode: '0644'
+    when: oc_install_needed
+
+  - name: Extract oc client
+    unarchive:
+      src: "{{ work_dir }}/openshift-client.tar.gz"
+      dest: "{{ work_dir }}"
+      remote_src: yes
+      creates: "{{ work_dir }}/oc"
+    when: oc_install_needed
+
+  - name: Install oc binary
+    copy:
+      src: "{{ work_dir }}/oc"
+      dest: "{{ oc_bin }}"
+      mode: '0755'
+      remote_src: yes
+    when: oc_install_needed
+
+  - name: Install kubectl binary
+    copy:
+      src: "{{ work_dir }}/kubectl"
+      dest: "{{ install_dir }}/kubectl"
+      mode: '0755'
+      remote_src: yes
+    when: oc_install_needed
+
+  # --------------------------------------------------
+  # Cleanup (ONLY after install)
+  # --------------------------------------------------
+  - name: Cleanup archive and extracted binary
+    file:
+      path: "{{ item }}"
+      state: absent
+    loop:
+      - "{{ work_dir }}"
+    when: oc_install_needed
+
+  # --------------------------------------------------
+  # Verification (supported flags)
+  # --------------------------------------------------
+  - name: Verify oc client installation
+    command: "{{ oc_bin }} version --client"
+    register: oc_final
+    changed_when: false
+
+  - name: Show oc client version
+    debug:
+      var: oc_final.stdout_lines
+
+  - name: Verify kubectl installation
+    command: "kubectl version --client"
+    register: kubectl_final
+    changed_when: false
+
+  - name: Show kubectl version
+    debug:
+      var: kubectl_final.stdout_lines

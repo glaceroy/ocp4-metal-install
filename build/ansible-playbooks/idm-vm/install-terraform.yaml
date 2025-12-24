@@ -58,4 +58,4 @@
 
     - name: Show Terraform version
       debug:
-        var: terraform_version_output.stdout
+        var: terraform_version_output.stdout_lines

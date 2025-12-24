@@ -1,0 +1,53 @@
+apiVersion: mirror.openshift.io/v1alpha2
+kind: ImageSetConfiguration
+
+mirror:
+  platform:
+    channels:
+      - name: stable-4.18
+    architectures:
+      - amd64
+
+  operators:
+    - catalog: registry.redhat.io/redhat/redhat-operator-index:v4.18
+      packages:
+        - name: kiali-ossm
+          channels:
+            - name: stable
+              minVersion: "2.17.2"
+
+        - name: openshift-gitops-operator
+          channels:
+            - name: latest
+              minVersion: "1.19.0"
+
+        - name: openshift-pipelines-operator-rh
+          channels:
+            - name: latest
+              minVersion: "1.20.2"
+
+        - name: servicemeshoperator
+          channels:
+            - name: stable
+              minVersion: "2.6.9"
+              maxVersion: "2.6.9"
+
+        - name: servicemeshoperator3
+          channels:
+            - name: stable
+              minVersion: "3.0.4"
+
+        - name: openshift-cert-manager-operator
+          channels:
+            - name: stable-v1
+              minVersion: "1.18.0"
+
+        - name: file-integrity-operator
+          channels:
+            - name: stable
+              minVersion: "1.3.8"
+
+        - name: deployment-validation-operator
+          channels:
+            - name: alpha
+              minVersion: "0.7.13"
