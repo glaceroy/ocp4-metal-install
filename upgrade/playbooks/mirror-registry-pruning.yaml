@@ -1,0 +1,41 @@
+- name: Prune oc-mirror workspace (dry-run)
+  hosts: 127.0.0.1
+  connection: local
+  become: true
+
+  vars:
+    oc_mirror_bin: /usr/local/bin/oc-mirror
+    oc_mirror_config: /opt/oc-mirror/ocp-imageset-config.yaml
+    oc_mirror_workspace: file:///opt/oc-mirror/mirror-workspace
+    mirror_registry: registry.cloud.lab:8443
+    authfile: /opt/oc-mirror/pull-secret.json
+
+  tasks:
+    - name: Run oc-mirror prune dry-run
+      command: >
+        {{ oc_mirror_bin }} --v2 prune
+        --config {{ oc_mirror_config }}
+        --workspace {{ oc_mirror_workspace }}
+        --registry {{ mirror_registry }}
+        --authfile {{ authfile }}
+        --dry-run
+      register: prune_dry_run
+      changed_when: false
+
+    - name: Show prune dry-run output
+      debug:
+        var: prune_dry_run.stdout_lines
+
+    - name: Run oc-mirror prune (actual)
+      command: >
+        {{ oc_mirror_bin }} --v2 prune
+        --config {{ oc_mirror_config }}
+        --workspace {{ oc_mirror_workspace }}
+        --registry {{ mirror_registry }}
+        --authfile {{ authfile }}
+      register: prune_actual
+      changed_when: true
+
+    - name: Show prune result
+      debug:
+        var: prune_actual.stdout_lines

@@ -12,3 +12,50 @@ spec:
     - registry.cloud.lab:8443/openshift/release-images
     source: quay.io/openshift-release-dev/ocp-release
 status: {}
+---
+apiVersion: config.openshift.io/v1
+kind: ImageDigestMirrorSet
+metadata:
+  name: idms-operator-0
+spec:
+  imageDigestMirrors:
+  - mirrors:
+    - registry.cloud.lab:8443/ubi9
+    source: registry.redhat.io/ubi9
+  - mirrors:
+    - registry.cloud.lab:8443/openshift-gitops-1
+    source: registry.redhat.io/openshift-gitops-1
+  - mirrors:
+    - registry.cloud.lab:8443/openshift-pipelines
+    source: registry.redhat.io/openshift-pipelines
+  - mirrors:
+    - registry.cloud.lab:8443/openshift-serverless-1
+    source: registry.redhat.io/openshift-serverless-1
+  - mirrors:
+    - registry.cloud.lab:8443/source-to-image
+    source: registry.redhat.io/source-to-image
+  - mirrors:
+    - registry.cloud.lab:8443/openshift-service-mesh-dev-preview-beta
+    source: registry.redhat.io/openshift-service-mesh-dev-preview-beta
+  - mirrors:
+    - registry.cloud.lab:8443/openshift-service-mesh-tech-preview
+    source: registry.redhat.io/openshift-service-mesh-tech-preview
+  - mirrors:
+    - registry.cloud.lab:8443/dvo
+    source: registry.redhat.io/dvo
+  - mirrors:
+    - registry.cloud.lab:8443/openshift4
+    source: registry.redhat.io/openshift4
+  - mirrors:
+    - registry.cloud.lab:8443/cert-manager
+    source: registry.redhat.io/cert-manager
+  - mirrors:
+    - registry.cloud.lab:8443/openshift-service-mesh
+    source: registry.redhat.io/openshift-service-mesh
+  - mirrors:
+    - registry.cloud.lab:8443/rhel9
+    source: registry.redhat.io/rhel9
+  - mirrors:
+    - registry.cloud.lab:8443/compliance
+    source: registry.redhat.io/compliance
+status: {}
