@@ -29,8 +29,6 @@ mirror:
         - name: servicemeshoperator
           channels:
             - name: stable
-              minVersion: "2.6.9"
-              maxVersion: "2.6.9"
 
         - name: servicemeshoperator3
           channels:
