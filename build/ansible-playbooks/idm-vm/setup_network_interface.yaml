@@ -7,6 +7,7 @@
   vars:
     internal_interface: ens19
     external_interface: ens18
+    internal_prefix: 24
     internal_ip: 10.10.0.2
     dns_server_ip: 10.10.0.1
     dns4_search_domains:
@@ -21,7 +22,7 @@
         state: present
         autoconnect: yes
         ip4:
-          - "{{ internal_ip }}"
+          - "{{ internal_ip }}/{{ internal_prefix }}"
         never_default4: true
         dns4:
           - "{{ dns_server_ip }}"
@@ -46,6 +47,3 @@
       ansible.builtin.command:
         cmd: nmcli connection up "{{ external_interface }}"
       changed_when: false
-
-
-

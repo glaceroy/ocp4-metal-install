@@ -2,7 +2,7 @@ $TTL 1W
 $ORIGIN 0.10.10.in-addr.arpa.
 
 @   IN  SOA utility.cloud.lab. root (
-        2019070700      ; serial
+        2025122401      ; serial
         3H              ; refresh
         30M             ; retry
         2W              ; expire
