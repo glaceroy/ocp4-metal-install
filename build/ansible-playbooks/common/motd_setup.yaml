@@ -7,9 +7,9 @@
   vars:
     base_motd: |
       ***************************************************
-      *   Welcome to {{ vm_name }} Server               *
-      *   Managed by Ansible                            *
-      *   Unauthorized access is prohibited.            *
+      *   Welcome To {{ vm_name }} Server               *
+      *   Managed By Ansible                            *
+      *   Unauthorized Access Is Prohibited.            *
       *   With Great Power Comes Great Responsibility.  *
       ***************************************************
 
