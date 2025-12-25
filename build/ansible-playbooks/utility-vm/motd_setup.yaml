@@ -1,0 +1,48 @@
+---
+- name: Configure MOTD on lab VMs
+  hosts: lab_vms
+  become: true
+  gather_facts: true
+
+  vars:
+    base_motd: |
+      ******************************************************************
+      Welcome to {{ vm_name }}
+      Managed by Ansible
+      Unauthorized access is prohibited.
+      With Great Power Comes Great Responsibility.
+      ******************************************************************
+
+  tasks:
+    - name: Set vm_name per host
+    # Use inventory_hostname to derive a friendly name if you like
+      set_fact:
+        vm_name: "{{ inventory_hostname }}"
+
+    - name: Deploy MOTD with VM-specific name
+      copy:
+        dest: /etc/motd
+        content: "{{ base_motd }}"
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Ensure SSH prints MOTD
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^PrintMotd'
+        line: 'PrintMotd yes'
+        state: present
+        backup: yes
+
+    - name: Restart SSH service on RHEL-like systems
+      service:
+        name: sshd
+        state: restarted
+      when: ansible_facts['os_family'] in ['RedHat', 'Rocky', 'AlmaLinux', 'CentOS']
+
+    - name: Restart SSH service on Debian-based systems
+      service:
+        name: ssh
+        state: restarted
+      when: ansible_facts['os_family'] == 'Debian'
