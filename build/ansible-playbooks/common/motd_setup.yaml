@@ -6,12 +6,13 @@
 
   vars:
     base_motd: |
-      ***************************************************
-      *   Welcome To {{ vm_name }} Server               *
-      *   Managed By Ansible                            *
-      *   Unauthorized Access Is Prohibited.            *
-      *   With Great Power Comes Great Responsibility.  *
-      ***************************************************
+      ****************************************************
+      *   Welcome to utility.cloud.lab Server            *
+      *   Managed by Ansible                             *
+      *   Unauthorized Access Is Prohibited.             *
+      *   With Great Power Comes Great Responsibility.   *
+      ****************************************************
+
 
   tasks:
     - name: Set vm_name per host
