@@ -7,6 +7,18 @@
     files_source_path: ~/ocp4-metal-install/build/
     install_path: /usr/local/bin
     oc_version: "4.20.8"
+    binaries:
+      - name: oc
+        # oc version output usually contains "Client Version: 4.20.8" or similar
+        version_regex: '([0-9]+\.[0-9]+\.[0-9]+)'
+        url_template: "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/{{ oc_version }}/openshift-client-linux.tar.gz"
+      - name: openshift-install
+        # openshift-install version output usually contains "openshift-install 4.20.8"
+        version_regex: '([0-9]+\.[0-9]+\.[0-9]+)'
+        url_template: "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/{{ oc_version }}/openshift-install-linux.tar.gz"
+    completion_binaries:
+      - oc
+      - openshift-install
 
   tasks:
     ###############################
@@ -28,139 +40,87 @@
         state: latest
 
     ###############################
-    # KUBECTL INSTALL / UPDATE
+    # INSTALL/UPDATE OC AND OPENSHIFT-INSTALL
     ###############################
-    - name: Check current kubectl version
-      command: kubectl version --client
-      register: current_kubectl
-      ignore_errors: yes
+    - name: Check if binaries exist
+      stat:
+        path: "{{ install_path }}/{{ item.name }}"
+      register: binary_stat
+      loop: "{{ binaries }}"
+      loop_control:
+        loop_var: item
+        index_var: idx
+
+    - name: Get installed version (if exists)
+      command: "{{ install_path }}/{{ item.name }} version"
+      register: current_version
+      failed_when: false
       changed_when: false
+      when: binary_stat.results[idx].stat.exists
+      loop: "{{ binaries }}"
+      loop_control:
+        loop_var: item
+        index_var: idx
 
-    - name: Parse installed kubectl version
+    - name: Set installed version facts
       set_fact:
-        installed_version: "{{ (current_kubectl.stdout | regex_search('Client Version: v([0-9.]+)', '\\1') | first) | default('0.0.0') }}"
-
-    - name: Get latest stable kubectl version
-      ansible.builtin.uri:
-        url: https://dl.k8s.io/release/stable.txt
-        return_content: yes
-      register: latest_version
-
-    - name: Normalize latest kubectl version
-      set_fact:
-        latest_kubectl_version: "{{ latest_version.content | trim }}"
-
-    - name: Kubectl version info
-      debug:
-        msg:
-          installed: "{{ installed_version }}"
-          latest: "{{ latest_kubectl_version }}"
-
-    - name: Download latest kubectl if needed
-      ansible.builtin.get_url:
-        url: "https://dl.k8s.io/release/{{ latest_kubectl_version }}/bin/linux/amd64/kubectl"
-        dest: "{{ install_path }}/kubectl"
-        mode: '0755'
-      when: current_kubectl.failed or ('v' ~ installed_version) is version(latest_kubectl_version, '<')
-
-    ###############################
-    # OC CLIENT INSTALL / UPDATE
-    ###############################
-    - name: Check current oc version
-      command: oc version --client
-      register: current_oc
-      ignore_errors: yes
-      changed_when: false
-
-    - name: Parse installed oc version
-      set_fact:
-        installed_oc_version: "{{ (current_oc.stdout | regex_search('Client Version: v?([0-9.]+)', '\\1') | first) | default('0.0.0') }}"
-
-    - name: Show OC versions
-      debug:
-        msg:
-          installed: "{{ installed_oc_version }}"
-          requested: "{{ oc_version }}"
-
-    - name: Check if oc binary exists
-      ansible.builtin.stat:
-        path: "{{ install_path }}/oc"
-      register: oc_stat
-
-    - name: Download and extract oc client if needed
-      ansible.builtin.unarchive:
-        src: "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/{{ oc_version }}/openshift-client-linux.tar.gz"
-        dest: "{{ install_path }}"
-        mode: '0755'
-        remote_src: yes
-        exclude: '*.md'
-      when: not oc_stat.stat.exists or installed_oc_version is version(oc_version, '<')
-
-    ###############################
-    # OPENSHIFT-INSTALL INSTALL / UPDATE
-    ###############################
-    - name: Check current openshift-install version
-      command: openshift-install version
-      register: current_installer
-      ignore_errors: yes
-      changed_when: false
-
-    - name: Parse installed openshift-install version
-      set_fact:
-        installed_installer_version: >-
+        "installed_{{ item.name | replace('-', '_') }}_version": >-
           {{
-            (current_installer.stdout is defined and current_installer.stdout | length > 0 and
-            (current_installer.stdout is search('openshift-install ([0-9]+\.[0-9]+\.[0-9]+)') 
-              | regex_replace('openshift-install ([0-9]+\.[0-9]+\.[0-9]+)', '\\1')))
+            (
+              current_version.results[idx].stdout
+              | default('')
+              | regex_search(item.version_regex)
+            )
             | default('0.0.0')
           }}
+      loop: "{{ binaries }}"
+      loop_control:
+        loop_var: item
+        index_var: idx
 
-    - name: Show openshift-install versions
+    - name: Show installed and requested versions
       debug:
         msg:
-          installed: "{{ installed_installer_version }}"
+          installed: "{{ lookup('vars', 'installed_' + (item.name | replace('-', '_')) + '_version') | default('0.0.0') }}"
           requested: "{{ oc_version }}"
+      loop: "{{ binaries }}"
+      loop_control:
+        loop_var: item
 
-    - name: Check if openshift-install binary exists
-      ansible.builtin.stat:
-        path: "{{ install_path }}/openshift-install"
-      register: installer_stat
-
-    - name: Download and extract openshift-install if needed
-      ansible.builtin.unarchive:
-        src: "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/{{ oc_version }}/openshift-install-linux.tar.gz"
+    - name: Download and extract binary if needed
+      unarchive:
+        src: "{{ item.url_template }}"
         dest: "{{ install_path }}"
         mode: '0755'
         remote_src: yes
         exclude: '*.md'
-      when: not installer_stat.stat.exists or installed_installer_version is version(oc_version, '<')
+      loop: "{{ binaries }}"
+      loop_control:
+        loop_var: item
+        index_var: idx
+      when:
+        - not binary_stat.results[idx].stat.exists
+          or (
+              (lookup('vars', 'installed_' + (item.name | replace('-', '_')) + '_version')
+               | default('0.0.0'))
+              is version(oc_version, '<')
+            )
 
     ###############################
     # BASH COMPLETION
     ###############################
-    - name: Enable bash completion for oc
-      ansible.builtin.lineinfile:
+    - name: Enable bash completion for binaries
+      lineinfile:
         path: /etc/bashrc
-        line: 'source <(oc completion bash)'
+        line: "source <({{ item }} completion bash)"
         state: present
-
-    - name: Enable bash completion for kubectl
-      ansible.builtin.lineinfile:
-        path: /etc/bashrc
-        line: 'source <(kubectl completion bash)'
-        state: present
-
-    - name: Enable bash completion for openshift-install
-      ansible.builtin.lineinfile:
-        path: /etc/bashrc
-        line: 'source <(openshift-install completion bash)'
-        state: present
+      loop: "{{ completion_binaries }}"
 
     ###############################
     # DNS, DHCP, HAProxy, NFS
     ###############################
     - name: Copy bind DNS configuration file
-      ansible.builtin.copy:
+      copy:
         src: "{{ files_source_path }}/dns/named.conf"
         dest: /etc/named.conf
         owner: root
@@ -168,7 +128,7 @@
         mode: '0644'
 
     - name: Ensure named zones directory exists
-      ansible.builtin.file:
+      file:
         path: /etc/named/zones
         state: directory
         owner: root
@@ -176,9 +136,9 @@
         mode: '0755'
 
     - name: Copy zone files for ocp.cloud.lab
-      ansible.builtin.copy:
+      copy:
         src: "{{ files_source_path }}/dns/zones/{{ item }}"
-        dest: /etc/named/zones/{{ item }}
+        dest: "/etc/named/zones/{{ item }}"
         owner: root
         group: root
         mode: '0644'
@@ -191,17 +151,17 @@
         label: "{{ item }}"
 
     - name: Copy dhcpd configuration file
-      ansible.builtin.copy:
+      copy:
         src: "{{ files_source_path }}/dhcpd/dhcpd.conf"
-        dest: /etc/dhcp/dhcpd.conf
+        dest: /etc/dhcp/dhcpd.conf"
         owner: root
         group: root
         mode: '0644'
 
     - name: Copy haproxy mgmt ingress configuration file
-      ansible.builtin.copy:
+      copy:
         src: "{{ files_source_path }}/haproxy-mgmt-ingress/haproxy.cfg"
-        dest: /etc/haproxy/haproxy.cfg
+        dest: /etc/haproxy/haproxy.cfg"
         owner: root
         group: root
         mode: '0644'
@@ -213,14 +173,14 @@
         persistent: yes
 
     - name: Update Apache listen port
-      ansible.builtin.replace:
+      replace:
         path: /etc/httpd/conf/httpd.conf
         regexp: '^Listen\s+80$'
         replace: 'Listen 0.0.0.0:8080'
       notify: restart httpd
 
     - name: Configure NFS shares
-      ansible.builtin.file:
+      file:
         path: /shares/registry
         state: directory
         owner: nobody
@@ -228,18 +188,18 @@
         mode: '0777'
 
     - name: Store server IP in a variable
-      ansible.builtin.set_fact:
+      set_fact:
         server_ip: "{{ ansible_default_ipv4.address }}"
 
     - name: Configure NFS export for registry
-      ansible.builtin.lineinfile:
-        path: /etc/exports
+      lineinfile:
+        path: /etc/exports"
         regexp: "^/shares/registry"
         line: "/shares/registry {{ server_ip }}/24(rw,sync,root_squash,no_subtree_check,no_wdelay)"
         create: yes
 
     - name: Reload NFS exports
-      ansible.builtin.command: exportfs -rv
+      command: exportfs -rv
       become: yes
 
     ###############################
