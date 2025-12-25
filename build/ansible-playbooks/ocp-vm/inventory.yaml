@@ -1,0 +1,6 @@
+all:
+  hosts:
+    proxmox:
+      ansible_host: proxmox.cloud.lab
+      ansible_user: root
+      ansible_connection: ssh

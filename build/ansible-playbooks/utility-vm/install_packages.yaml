@@ -2,13 +2,16 @@
 - hosts: 127.0.0.1
   connection: local
   become: yes
-  
+
   vars:
     files_source_path: ~/ocp4-metal-install/build/
     install_path: /usr/local/bin
     oc_version: "4.20.8"
 
   tasks:
+    ###############################
+    # INSTALL REQUIRED PACKAGES
+    ###############################
     - name: Install required packages
       dnf:
         name:
@@ -94,6 +97,45 @@
       when: not oc_stat.stat.exists or installed_oc_version is version(oc_version, '<')
 
     ###############################
+    # OPENSHIFT-INSTALL INSTALL / UPDATE
+    ###############################
+    - name: Check current openshift-install version
+      command: openshift-install version
+      register: current_installer
+      ignore_errors: yes
+      changed_when: false
+
+    - name: Parse installed openshift-install version
+      set_fact:
+        installed_installer_version: >-
+          {{
+            (current_installer.stdout is defined and current_installer.stdout | length > 0 and
+            (current_installer.stdout is search('openshift-install ([0-9]+\.[0-9]+\.[0-9]+)') 
+              | regex_replace('openshift-install ([0-9]+\.[0-9]+\.[0-9]+)', '\\1')))
+            | default('0.0.0')
+          }}
+
+    - name: Show openshift-install versions
+      debug:
+        msg:
+          installed: "{{ installed_installer_version }}"
+          requested: "{{ oc_version }}"
+
+    - name: Check if openshift-install binary exists
+      ansible.builtin.stat:
+        path: "{{ install_path }}/openshift-install"
+      register: installer_stat
+
+    - name: Download and extract openshift-install if needed
+      ansible.builtin.unarchive:
+        src: "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/{{ oc_version }}/openshift-install-linux.tar.gz"
+        dest: "{{ install_path }}"
+        mode: '0755'
+        remote_src: yes
+        exclude: '*.md'
+      when: not installer_stat.stat.exists or installed_installer_version is version(oc_version, '<')
+
+    ###############################
     # BASH COMPLETION
     ###############################
     - name: Enable bash completion for oc
@@ -106,6 +148,12 @@
       ansible.builtin.lineinfile:
         path: /etc/bashrc
         line: 'source <(kubectl completion bash)'
+        state: present
+
+    - name: Enable bash completion for openshift-install
+      ansible.builtin.lineinfile:
+        path: /etc/bashrc
+        line: 'source <(openshift-install completion bash)'
         state: present
 
     ###############################

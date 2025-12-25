@@ -1,33 +1,83 @@
+#---------------------------------------------------
+# Proxmox API credentials
+#---------------------------------------------------
 proxmox_node: pve1
-storage: local-lvm
-bridge: vmbr0
+storage: pve-disk-2
+bridge: vmbr1
 
-api_user: ansible@pve
+api_user: sys_ansible
 api_token_id: ansible-token
-api_token_secret: REPLACE_ME
+api_token_secret: fde48f03-d4fe-4776-a0b3-8eda3aa7b62e
 
-rhcos_image: /var/lib/vz/template/qcow2/rhcos-4.18.qcow2
+#---------------------------------------------------
+# CoreOS ISO path
+#---------------------------------------------------
+rhcos_iso: /var/lib/vz/template/iso/rhcos-4.18.30-x86_64-live.x86_64.iso
 
+#---------------------------------------------------
+# HTTP server hosting ignition files
+#---------------------------------------------------
+ignition_base_url: "http://10.10.0.1:8080/ocp4"
+
+#---------------------------------------------------
+# Template config (bootstrap VM converted to template)
+#---------------------------------------------------
 template:
   name: rhcos-template
   vmid: 900
-  memory: 4096
-  cores: 2
-  disk: 120
+  memory: 8192
+  cores: 4
+  disk: 40
 
+#---------------------------------------------------
+# Default node resources per type
+#---------------------------------------------------
+defaults:
+  bootstrap:
+    memory: 8192
+    cores: 4
+    ignition: "{{ ignition_base_url }}/bootstrap.ign"
+  master:
+    memory: 16384
+    cores: 8
+    ignition: "{{ ignition_base_url }}/master.ign"
+  worker:
+    memory: 16384
+    cores: 4
+    ignition: "{{ ignition_base_url }}/worker.ign"
+
+#---------------------------------------------------
+# Node definitions (only unique values)
+#---------------------------------------------------
 bootstrap:
   - name: bootstrap
-    vmid: 700
-    mac: "52:54:00:10:00:01"
+    vmid: 108
+    mac: "BC:24:11:0F:3F:17"
 
 masters:
-  - { name: master-1, vmid: 710, mac: "52:54:00:10:00:11" }
-  - { name: master-2, vmid: 711, mac: "52:54:00:10:00:12" }
-  - { name: master-3, vmid: 712, mac: "52:54:00:10:00:13" }
+  - name: master01
+    vmid: 100
+    mac: "BC:24:11:B2:9B:16"
+  - name: master02
+    vmid: 101
+    mac: "BC:24:11:2B:5B:65"
+  - name: master03
+    vmid: 102
+    mac: "BC:24:11:74:7E:18"
 
 workers:
-  - { name: worker-1, vmid: 720, mac: "52:54:00:10:00:21" }
-  - { name: worker-2, vmid: 721, mac: "52:54:00:10:00:22" }
-  - { name: worker-3, vmid: 722, mac: "52:54:00:10:00:23" }
-  - { name: worker-4, vmid: 723, mac: "52:54:00:10:00:24" }
-  - { name: worker-5, vmid: 724, mac: "52:54:00:10:00:25" }
+  - name: worker01
+    vmid: 103
+    mac: "BC:24:11:3E:AA:C5"
+  - name: worker02
+    vmid: 104
+    mac: "BC:24:11:D7:17:06"
+  - name: worker03
+    vmid: 105
+    mac: "BC:24:11:2B:93:88"
+  - name: worker04
+    vmid: 106
+    mac: "BC:24:11:87:37:60"
+  - name: worker05
+    vmid: 107
+    mac: "BC:24:11:DC:6B:6E"
