@@ -7,7 +7,7 @@
   vars:
     internal_interface: ens19
     external_interface: ens18
-    internal_ip: 10.10.0.1
+    internal_ip: 10.10.0.2
     dns4_search_domains:
       - cloud.lab
 
@@ -23,7 +23,7 @@
           - "{{ internal_ip }}"
         never_default4: true
         dns4:
-          - 127.0.0.1
+          - 10.10.0.1
         dns4_search: "{{ dns4_search_domains }}"
 
     - name: Configure LAN NIC for external zone
@@ -34,7 +34,7 @@
         state: present
         dns4_ignore_auto: true
         dns4:
-          - 127.0.0.1
+          - 10.10.0.1
 
     - name: Bring up internal interface
       ansible.builtin.command:
