@@ -6,7 +6,7 @@
   vars:
     files_source_path: ~/ocp4-metal-install/build/
     install_path: /usr/local/bin
-    oc_version: "4.20.8"
+    oc_version: "4.18.30"
     binaries:
       - name: oc
         # oc version output usually contains "Client Version: 4.20.8" or similar

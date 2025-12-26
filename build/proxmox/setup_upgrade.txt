@@ -1,0 +1,32 @@
+Ansible Automation
+****************************************
+token ID - sys_ansible@pam!ansible_token
+Secret.  - 3d98a4bd-7f38-4748-a355-7fe01cbe6071
+****************************************
+
+Proxmox repositories need to be udpated
+
+1. Disable the enterprise repository:
+file - /etc/apt/sources.list.d/pve-enterprise.list and /etc/apt/sources.list.d/ceph.list
+# deb https://enterprise.proxmox.com/debian/pve bookworm pve-enterprise
+
+2. Add the no-subscription repository:
+file - /etc/apt/sources.list
+deb http://download.proxmox.com/debian/pve bookworm pve-no-subscription
+deb http://deb.debian.org/debian bookworm main
+deb http://deb.debian.org/debian bookworm-updates main
+deb http://security.debian.org/debian-security bookworm-security main
+
+3. Run 
+apt update
+apt install python3-proxmoxer python3-requests python3-pip
+
+Python venv
+python3 -m venv ansible
+source ansible/bin/activate
+pip install --upgrade proxmoxer
+pip install requests
+
+Proxmox GUI Certificates
+
+

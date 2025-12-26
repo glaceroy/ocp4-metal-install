@@ -1,6 +1,8 @@
+# inventory.yaml
 all:
   hosts:
     proxmox:
-      ansible_host: proxmox.cloud.lab
+      ansible_host: 192.168.0.100
       ansible_user: root
       ansible_connection: ssh
+      ansible_python_interpreter: /root/ansible/bin/python

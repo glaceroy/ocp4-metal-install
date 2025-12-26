@@ -1,18 +1,18 @@
 #---------------------------------------------------
 # Proxmox API credentials
 #---------------------------------------------------
-proxmox_node: pve1
+proxmox_node: host01
 storage: pve-disk-2
 bridge: vmbr1
 
-api_user: sys_ansible
-api_token_id: ansible-token
-api_token_secret: fde48f03-d4fe-4776-a0b3-8eda3aa7b62e
+api_user: sys_ansible@pam
+api_token_id: ansible_token
+api_token_secret: 3d98a4bd-7f38-4748-a355-7fe01cbe6071
 
 #---------------------------------------------------
 # CoreOS ISO path
 #---------------------------------------------------
-rhcos_iso: /var/lib/vz/template/iso/rhcos-4.18.30-x86_64-live.x86_64.iso
+rhcos_iso: "local:iso/rhcos-4.18.30-x86_64-live.x86_64.iso"
 
 #---------------------------------------------------
 # HTTP server hosting ignition files
@@ -53,31 +53,40 @@ bootstrap:
   - name: bootstrap
     vmid: 108
     mac: "BC:24:11:0F:3F:17"
+    ip: "10.10.0.200"
 
 masters:
   - name: master01
     vmid: 100
     mac: "BC:24:11:B2:9B:16"
+    ip: "10.10.0.201"
   - name: master02
     vmid: 101
     mac: "BC:24:11:2B:5B:65"
+    ip: "10.10.0.202"
   - name: master03
     vmid: 102
     mac: "BC:24:11:74:7E:18"
+    ip: "10.10.0.203"
 
 workers:
   - name: worker01
     vmid: 103
     mac: "BC:24:11:3E:AA:C5"
+    ip: "10.10.0.211"
   - name: worker02
     vmid: 104
     mac: "BC:24:11:D7:17:06"
+    ip: "10.10.0.212"
   - name: worker03
     vmid: 105
     mac: "BC:24:11:2B:93:88"
+    ip: "10.10.0.213"
   - name: worker04
     vmid: 106
     mac: "BC:24:11:87:37:60"
+    ip: "10.10.0.214"
   - name: worker05
     vmid: 107
     mac: "BC:24:11:DC:6B:6E"
+    ip: "10.10.0.215"
