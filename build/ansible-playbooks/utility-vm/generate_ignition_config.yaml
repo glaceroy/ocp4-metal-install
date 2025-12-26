@@ -47,6 +47,11 @@
         state: directory
         mode: '0755'
 
+    - name: Remove existing files from web directory
+      file:
+        path: "{{ web_dir }}"
+        state: absent
+
     - name: Find all ignition files
       find:
         paths: "{{ output_dir }}"
