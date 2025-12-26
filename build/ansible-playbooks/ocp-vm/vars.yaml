@@ -51,12 +51,12 @@ templates:
   - name: rhcos-master-template
     vmid: 9001
     role: master
-    disk: 40
+    disk: 50
 
   - name: rhcos-worker-template
     vmid: 9002
     role: worker
-    disk: 40
+    disk: 80
 
 #---------------------------------------------------
 # Nodes

@@ -47,19 +47,9 @@
         boot: cd
         scsihw: "{{ defaults.bootstrap.scsihw }}"
         scsi:
-          scsi0: "{{ storage }}:40"
+          scsi0: "{{ storage }}:40,iothread=1"
         ostype: l26
         state: present
-      loop: "{{ bootstrap }}"
-
-    - name: Inject bootstrap installer args
-      command: >
-        qm set {{ item.vmid }}
-        --args "-append coreos.inst.install_dev=/dev/sda
-        coreos.inst.ignition_url={{ defaults.bootstrap.ignition }}
-        coreos.inst.insecure"
-      delegate_to: "{{ ansible_host }}"
-      become: true
       loop: "{{ bootstrap }}"
 
     - name: Start bootstrap VM
@@ -71,6 +61,16 @@
         node: "{{ proxmox_node }}"
         vmid: "{{ item.vmid }}"
         state: started
+      loop: "{{ bootstrap }}"
+
+    - name: Wait for bootstrap installation
+      pause:
+        minutes: 5
+
+    - name: Clear bootstrap kernel args
+      command: qm set {{ item.vmid }} --args ""
+      delegate_to: "{{ ansible_host }}"
+      become: true
       loop: "{{ bootstrap }}"
 
     # --------------------------------------------------
@@ -95,19 +95,9 @@
         boot: cd
         scsihw: "{{ defaults[item.role].scsihw }}"
         scsi:
-          scsi0: "{{ storage }}:{{ item.disk }}"
+          scsi0: "{{ storage }}:{{ item.disk }},iothread=1"
         ostype: l26
         state: present
-      loop: "{{ templates }}"
-
-    - name: Inject installer args for templates
-      command: >
-        qm set {{ item.vmid }}
-        --args "-append coreos.inst.install_dev=/dev/sda
-        coreos.inst.ignition_url={{ defaults[item.role].ignition }}
-        coreos.inst.insecure"
-      delegate_to: "{{ ansible_host }}"
-      become: true
       loop: "{{ templates }}"
 
     - name: Start template installer VMs
@@ -179,3 +169,20 @@
         full: true
         state: present
       loop: "{{ workers }}"
+
+    - name: Start all cloned Master VMs
+      community.proxmox.proxmox_kvm:
+        api_host: "{{ ansible_host }}"
+        api_user: "{{ api_user }}"
+        api_token_id: "{{ api_token_id }}"
+        api_token_secret: "{{ api_token_secret }}"
+        node: "{{ proxmox_node }}"
+        vmid: "{{ item.vmid }}"
+        state: started
+      loop: "{{ masters }}"
+
+    - name: Enable Proxmox firewall on all VMs
+      command: qm set {{ item.vmid }} --firewall 1
+      delegate_to: "{{ ansible_host }}"
+      become: true
+      loop: "{{ bootstrap + masters + workers }}"
