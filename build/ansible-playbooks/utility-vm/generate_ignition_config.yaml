@@ -2,18 +2,31 @@
 - name: Generate OpenShift manifests and ignition configs
   hosts: localhost
   gather_facts: false
+
   vars:
-    install_config_path: "/root/ocp4-metal-install/build/install-config/install-config.yaml"   # path to your install-config.yaml
-    output_dir: "/root/ocp-install-config"                 # directory to store generated files
-    web_dir: "/var/www/html/ocp4"                          # directory to copy ignition files
+    install_config_path: "/root/ocp4-metal-install/build/install-config/install-config.yaml"
+    output_dir: "/root/ocp-install-config"
+    web_dir: "/var/www/html/ocp4"
+
+    install_commands:
+      - name: manifests
+        cmd: "openshift-install create manifests --dir {{ output_dir }}"
+      - name: ignition-configs
+        cmd: "openshift-install create ignition-configs --dir {{ output_dir }}"
 
   tasks:
 
-    - name: Ensure output directory exists
+    # --------------------------------------------------
+    # Clean and prepare output directory
+    # --------------------------------------------------
+    - name: Recreate clean output directory
       file:
         path: "{{ output_dir }}"
-        state: directory
+        state: "{{ item }}"
         mode: '0755'
+      loop:
+        - absent
+        - directory
 
     - name: Copy install-config.yaml to output directory
       copy:
@@ -21,68 +34,66 @@
         dest: "{{ output_dir }}/install-config.yaml"
         mode: '0644'
 
-    - name: Generate OpenShift manifests
-      command: >
-        openshift-install create manifests
-        --dir "{{ output_dir }}"
+    # --------------------------------------------------
+    # Run OpenShift installer steps
+    # --------------------------------------------------
+    - name: Run OpenShift installer commands
+      command: "{{ item.cmd }}"
       environment:
         HOME: "{{ ansible_env.HOME }}"
-      register: manifests_result
-      failed_when: manifests_result.rc != 0
-      changed_when: "'Creating' in manifests_result.stdout_lines"
+      register: install_results
+      failed_when: install_results.rc != 0
+      changed_when: "'Creating' in install_results.stdout"
+      loop: "{{ install_commands }}"
+      loop_control:
+        label: "{{ item.name }}"
 
-    - name: Generate OpenShift ignition configs
-      command: >
-        openshift-install create ignition-configs
-        --dir "{{ output_dir }}"
-      environment:
-        HOME: "{{ ansible_env.HOME }}"
-      register: ignition_result
-      failed_when: ignition_result.rc != 0
-      changed_when: "'Creating' in ignition_result.stdout_lines"
-
-    - name: Ensure web directory exists
+    # --------------------------------------------------
+    # Clean and prepare web directory
+    # --------------------------------------------------
+    - name: Recreate clean web directory
       file:
         path: "{{ web_dir }}"
-        state: directory
+        state: "{{ item }}"
         mode: '0755'
+      loop:
+        - absent
+        - directory
 
-    - name: Remove existing files from web directory
-      file:
-        path: "{{ web_dir }}"
-        state: absent
-
-    - name: Find all ignition files
+    # --------------------------------------------------
+    # Copy ignition files
+    # --------------------------------------------------
+    - name: Find ignition files
       find:
         paths: "{{ output_dir }}"
         patterns: "*.ign"
-      register: ignition_files_found
+      register: ignition_files
 
-    - name: Copy ignition files to web directory
+    - name: Publish ignition files to web directory
       copy:
         src: "{{ item.path }}"
         dest: "{{ web_dir }}/{{ item.path | basename }}"
-        owner: root
-        group: root
-        mode: '0644'
-      loop: "{{ ignition_files_found.files }}"
-
-    - name: Set SELinux context for Apache
-      command: chcon -R -t httpd_sys_content_t "{{ web_dir }}"
-
-    - name: Change ownership to apache user
-      file:
-        path: "{{ web_dir }}"
         owner: apache
         group: apache
-        recurse: yes
+        mode: '0644'
+      loop: "{{ ignition_files.files }}"
 
-    - name: Set directory permissions
-      file:
-        path: "{{ web_dir }}"
-        mode: '0755'
-        recurse: yes
+    # --------------------------------------------------
+    # Permissions and SELinux
+    # --------------------------------------------------
+    - name: Set SELinux context and permissions for Apache
+      block:
+        - command: chcon -R -t httpd_sys_content_t "{{ web_dir }}"
+        - file:
+            path: "{{ web_dir }}"
+            owner: apache
+            group: apache
+            mode: '0755'
+            recurse: yes
 
+    # --------------------------------------------------
+    # Verification
+    # --------------------------------------------------
     - name: List ignition files in web directory
       command: ls -l "{{ web_dir }}"
       register: file_list
