@@ -36,15 +36,24 @@ defaults:
   bootstrap:
     memory: 8192
     cores: 4
+    cpu: x86-64-v2-AES
+    scsihw: VirtIO SCSI single
     ignition: "{{ ignition_base_url }}/bootstrap.ign"
+    firewall: true
   master:
     memory: 16384
     cores: 8
+    cpu: x86-64-v2-AES
+    scsihw: VirtIO SCSI single
     ignition: "{{ ignition_base_url }}/master.ign"
+    firewall: true
   worker:
     memory: 16384
     cores: 4
+    cpu: x86-64-v2-AES
+    scsihw: VirtIO SCSI single
     ignition: "{{ ignition_base_url }}/worker.ign"
+    firewall: true
 
 #---------------------------------------------------
 # Node definitions (only unique values)

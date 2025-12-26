@@ -39,15 +39,19 @@
         name: "{{ item.name }}"
         memory: "{{ defaults.bootstrap.memory }}"
         cores: "{{ defaults.bootstrap.cores }}"
+        cpu: "{{ defaults.bootstrap.cpu }}"  
         net:
           net0: "virtio={{ item.mac }},bridge={{ bridge }}"
         ide:
           ide2: "{{ rhcos_iso }},media=cdrom"
         boot: cd
-        scsihw: virtio-scsi-pci
+        scsihw: "{{ defaults.bootstrap.scsihw }}"
         scsi:
           scsi0: "{{ storage }}:{{ template.disk }}"
         ostype: l26
+        firewall: "{{ defaults.bootstrap.firewall }}" 
+        args: >
+          -append "coreos.inst.install_dev=/dev/sda coreos.inst.ignition_url={{ defaults.bootstrap.ignition }} coreos.inst.insecure_ignition"
         state: present
       loop: "{{ bootstrap }}"
       loop_control:
@@ -62,14 +66,6 @@
         node: "{{ proxmox_node }}"
         vmid: "{{ item.vmid }}"
         state: started
-      loop: "{{ bootstrap }}"
-      loop_control:
-        loop_var: item
-
-    - name: Install CoreOS on bootstrap VM via Ignition
-      ansible.builtin.shell: |
-        ssh -o StrictHostKeyChecking=no core@{{ item.ip }} \
-        "sudo coreos-installer install /dev/sda --ignition-url {{ defaults.bootstrap.ignition }} --insecure-ignition"
       loop: "{{ bootstrap }}"
       loop_control:
         loop_var: item
