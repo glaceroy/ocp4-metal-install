@@ -8,6 +8,7 @@ bridge: vmbr1
 api_user: sys_ansible@pam
 api_token_id: ansible_token
 api_token_secret: 3d98a4bd-7f38-4748-a355-7fe01cbe6071
+bootstrap_ssh_user: root
 
 #---------------------------------------------------
 # CoreOS ISO

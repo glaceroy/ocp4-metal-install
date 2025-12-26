@@ -179,3 +179,13 @@
         full: true
         state: present
       loop: "{{ workers }}"
+
+    # --------------------------------------------------
+    # Enable Proxmox firewall for all VMs
+    # --------------------------------------------------
+    - name: Enable Proxmox firewall
+      command: qm set {{ item.vmid }} --firewall 1
+      delegate_to: "{{ ansible_host }}"
+      become: true
+      remote_user: root
+      loop: "{{ bootstrap + masters + workers }}"
