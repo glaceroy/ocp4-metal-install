@@ -28,7 +28,7 @@
     # --------------------------------------------------
     # Create Bootstrap VM from ISO
     # --------------------------------------------------
-    - name: Create bootstrap VM from ISO
+    - name: Create bootstrap VM
       community.proxmox.proxmox_kvm:
         api_host: "{{ ansible_host }}"
         api_user: "{{ api_user }}"
@@ -39,7 +39,7 @@
         name: "{{ item.name }}"
         memory: "{{ defaults.bootstrap.memory }}"
         cores: "{{ defaults.bootstrap.cores }}"
-        cpu: "{{ defaults.bootstrap.cpu }}"  
+        cpu: "{{ defaults.bootstrap.cpu }}"
         net:
           net0: "virtio={{ item.mac }},bridge={{ bridge }}"
         ide:
@@ -47,15 +47,20 @@
         boot: cd
         scsihw: "{{ defaults.bootstrap.scsihw }}"
         scsi:
-          scsi0: "{{ storage }}:{{ template.disk }}"
+          scsi0: "{{ storage }}:40"
         ostype: l26
-        firewall: "{{ defaults.bootstrap.firewall }}" 
-        args: >
-          -append "coreos.inst.install_dev=/dev/sda coreos.inst.ignition_url={{ defaults.bootstrap.ignition }} coreos.inst.insecure_ignition"
         state: present
       loop: "{{ bootstrap }}"
-      loop_control:
-        loop_var: item
+
+    - name: Inject bootstrap installer args
+      command: >
+        qm set {{ item.vmid }}
+        --args "-append coreos.inst.install_dev=/dev/sda
+        coreos.inst.ignition_url={{ defaults.bootstrap.ignition }}
+        coreos.inst.insecure"
+      delegate_to: "{{ ansible_host }}"
+      become: true
+      loop: "{{ bootstrap }}"
 
     - name: Start bootstrap VM
       community.proxmox.proxmox_kvm:
@@ -67,80 +72,110 @@
         vmid: "{{ item.vmid }}"
         state: started
       loop: "{{ bootstrap }}"
-      loop_control:
-        loop_var: item
-
-    - name: Convert bootstrap VM to template
-      ansible.builtin.command: qm template {{ template.vmid }}
 
     # --------------------------------------------------
-    # Clone and start Masters
+    # Create Installer VMs for OSE nodes templates
     # --------------------------------------------------
-    - name: Clone master nodes from template
+    - name: Create installer VMs for templates
       community.proxmox.proxmox_kvm:
         api_host: "{{ ansible_host }}"
         api_user: "{{ api_user }}"
         api_token_id: "{{ api_token_id }}"
         api_token_secret: "{{ api_token_secret }}"
         node: "{{ proxmox_node }}"
-        vmid: "{{ node.vmid }}"
-        clone: "{{ template.vmid }}"
-        name: "{{ node.name }}"
-        full: true
-        memory: "{{ defaults.master.memory }}"
-        cores: "{{ defaults.master.cores }}"
+        vmid: "{{ item.vmid }}"
+        name: "{{ item.name }}"
+        memory: "{{ defaults[item.role].memory }}"
+        cores: "{{ defaults[item.role].cores }}"
+        cpu: "{{ defaults[item.role].cpu }}"
         net:
-          net0: "virtio={{ node.mac }},bridge={{ bridge }}"
+          net0: "virtio,bridge={{ bridge }}"
+        ide:
+          ide2: "{{ rhcos_iso }},media=cdrom"
+        boot: cd
+        scsihw: "{{ defaults[item.role].scsihw }}"
+        scsi:
+          scsi0: "{{ storage }}:{{ item.disk }}"
+        ostype: l26
+        state: present
+      loop: "{{ templates }}"
+
+    - name: Inject installer args for templates
+      command: >
+        qm set {{ item.vmid }}
+        --args "-append coreos.inst.install_dev=/dev/sda
+        coreos.inst.ignition_url={{ defaults[item.role].ignition }}
+        coreos.inst.insecure"
+      delegate_to: "{{ ansible_host }}"
+      become: true
+      loop: "{{ templates }}"
+
+    - name: Start template installer VMs
+      community.proxmox.proxmox_kvm:
+        api_host: "{{ ansible_host }}"
+        api_user: "{{ api_user }}"
+        api_token_id: "{{ api_token_id }}"
+        api_token_secret: "{{ api_token_secret }}"
+        node: "{{ proxmox_node }}"
+        vmid: "{{ item.vmid }}"
+        state: started
+      loop: "{{ templates }}"
+
+    - name: Wait for install reboot
+      shell: qm status {{ item.vmid }} | awk '{print $3}'
+      register: reboot_check
+      retries: 30
+      delay: 15
+      until: reboot_check.stdout | int < 120
+      loop: "{{ templates }}"
+
+    - name: Clear installer args
+      command: qm set {{ item.vmid }} --args ""
+      delegate_to: "{{ ansible_host }}"
+      become: true
+      loop: "{{ templates }}"
+
+    - name: Boot from disk
+      command: qm set {{ item.vmid }} --boot order=scsi0
+      delegate_to: "{{ ansible_host }}"
+      become: true
+      loop: "{{ templates }}"
+
+    - name: Convert to templates
+      command: qm template {{ item.vmid }}
+      loop: "{{ templates }}"
+
+    # --------------------------------------------------
+    # Clone Master and Worker VMs from template
+    # --------------------------------------------------
+    - name: Clone masters
+      community.proxmox.proxmox_kvm:
+        api_host: "{{ ansible_host }}"
+        api_user: "{{ api_user }}"
+        api_token_id: "{{ api_token_id }}"
+        api_token_secret: "{{ api_token_secret }}"
+        node: "{{ proxmox_node }}"
+        clone: 9001
+        vmid: "{{ item.vmid }}"
+        name: "{{ item.name }}"
+        net:
+          net0: "virtio={{ item.mac }},bridge={{ bridge }}"
+        full: true
         state: present
       loop: "{{ masters }}"
-      loop_control:
-        loop_var: node
 
-    - name: Start master VMs
+    - name: Clone workers
       community.proxmox.proxmox_kvm:
         api_host: "{{ ansible_host }}"
         api_user: "{{ api_user }}"
         api_token_id: "{{ api_token_id }}"
         api_token_secret: "{{ api_token_secret }}"
         node: "{{ proxmox_node }}"
-        vmid: "{{ node.vmid }}"
-        state: started
-      loop: "{{ masters }}"
-      loop_control:
-        loop_var: node
-
-    # --------------------------------------------------
-    # Clone and start Workers
-    # --------------------------------------------------
-    - name: Clone worker nodes from template
-      community.proxmox.proxmox_kvm:
-        api_host: "{{ ansible_host }}"
-        api_user: "{{ api_user }}"
-        api_token_id: "{{ api_token_id }}"
-        api_token_secret: "{{ api_token_secret }}"
-        node: "{{ proxmox_node }}"
-        vmid: "{{ node.vmid }}"
-        clone: "{{ template.vmid }}"
-        name: "{{ node.name }}"
-        full: true
-        memory: "{{ defaults.worker.memory }}"
-        cores: "{{ defaults.worker.cores }}"
+        clone: 9002
+        vmid: "{{ item.vmid }}"
+        name: "{{ item.name }}"
         net:
-          net0: "virtio={{ node.mac }},bridge={{ bridge }}"
+          net0: "virtio={{ item.mac }},bridge={{ bridge }}"
+        full: true
         state: present
       loop: "{{ workers }}"
-      loop_control:
-        loop_var: node
-
-    - name: Start worker VMs
-      community.proxmox.proxmox_kvm:
-        api_host: "{{ ansible_host }}"
-        api_user: "{{ api_user }}"
-        api_token_id: "{{ api_token_id }}"
-        api_token_secret: "{{ api_token_secret }}"
-        node: "{{ proxmox_node }}"
-        vmid: "{{ node.vmid }}"
-        state: started
-      loop: "{{ workers }}"
-      loop_control:
-        loop_var: node

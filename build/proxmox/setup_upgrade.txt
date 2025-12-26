@@ -3,6 +3,9 @@ Ansible Automation
 token ID - sys_ansible@pam!ansible_token
 Secret.  - 3d98a4bd-7f38-4748-a355-7fe01cbe6071
 ****************************************
+token ID - root@pam!ansible_token
+Secret.  - af70c929-172d-4358-8b8a-24a7c091625c
+****************************************
 
 Proxmox repositories need to be udpated
 

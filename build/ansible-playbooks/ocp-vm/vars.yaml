@@ -10,27 +10,17 @@ api_token_id: ansible_token
 api_token_secret: 3d98a4bd-7f38-4748-a355-7fe01cbe6071
 
 #---------------------------------------------------
-# CoreOS ISO path
+# CoreOS ISO
 #---------------------------------------------------
 rhcos_iso: "local:iso/rhcos-4.18.30-x86_64-live.x86_64.iso"
 
 #---------------------------------------------------
-# HTTP server hosting ignition files
+# Ignition hosting
 #---------------------------------------------------
 ignition_base_url: "http://10.10.0.1:8080/ocp4"
 
 #---------------------------------------------------
-# Template config (bootstrap VM converted to template)
-#---------------------------------------------------
-template:
-  name: rhcos-template
-  vmid: 900
-  memory: 8192
-  cores: 4
-  disk: 40
-
-#---------------------------------------------------
-# Default node resources per type
+# Defaults
 #---------------------------------------------------
 defaults:
   bootstrap:
@@ -39,63 +29,58 @@ defaults:
     cpu: x86-64-v2-AES
     scsihw: virtio-scsi-single
     ignition: "{{ ignition_base_url }}/bootstrap.ign"
-    firewall: true
+
   master:
     memory: 16384
     cores: 8
     cpu: x86-64-v2-AES
     scsihw: virtio-scsi-single
     ignition: "{{ ignition_base_url }}/master.ign"
-    firewall: true
+
   worker:
     memory: 16384
     cores: 4
     cpu: x86-64-v2-AES
     scsihw: virtio-scsi-single
     ignition: "{{ ignition_base_url }}/worker.ign"
-    firewall: true
 
 #---------------------------------------------------
-# Node definitions (only unique values)
+# Templates (ONLY master + worker)
+#---------------------------------------------------
+templates:
+  - name: rhcos-master-template
+    vmid: 9001
+    role: master
+    disk: 40
+
+  - name: rhcos-worker-template
+    vmid: 9002
+    role: worker
+    disk: 40
+
+#---------------------------------------------------
+# Nodes
 #---------------------------------------------------
 bootstrap:
   - name: bootstrap
     vmid: 108
-    mac: "BC:24:11:0F:3F:17"
-    ip: "10.10.0.200"
+    mac: BC:24:11:0F:3F:17
 
 masters:
   - name: master01
     vmid: 100
-    mac: "BC:24:11:B2:9B:16"
-    ip: "10.10.0.201"
+    mac: BC:24:11:B2:9B:16
   - name: master02
     vmid: 101
-    mac: "BC:24:11:2B:5B:65"
-    ip: "10.10.0.202"
+    mac: BC:24:11:2B:5B:65
   - name: master03
     vmid: 102
-    mac: "BC:24:11:74:7E:18"
-    ip: "10.10.0.203"
+    mac: BC:24:11:74:7E:18
 
 workers:
   - name: worker01
     vmid: 103
-    mac: "BC:24:11:3E:AA:C5"
-    ip: "10.10.0.211"
+    mac: BC:24:11:3E:AA:C5
   - name: worker02
     vmid: 104
-    mac: "BC:24:11:D7:17:06"
-    ip: "10.10.0.212"
-  - name: worker03
-    vmid: 105
-    mac: "BC:24:11:2B:93:88"
-    ip: "10.10.0.213"
-  - name: worker04
-    vmid: 106
-    mac: "BC:24:11:87:37:60"
-    ip: "10.10.0.214"
-  - name: worker05
-    vmid: 107
-    mac: "BC:24:11:DC:6B:6E"
-    ip: "10.10.0.215"
+    mac: BC:24:11:D7:17:06
