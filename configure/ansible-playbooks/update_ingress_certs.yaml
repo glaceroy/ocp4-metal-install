@@ -1,0 +1,142 @@
+---
+- name: Configure OpenShift trusted root CA and ingress certificate (k8s module)
+  hosts: localhost
+  gather_facts: false
+
+  vars:
+    kubeconfig: "/root/.kube/config"
+
+    # Root CA (ONLY)
+    root_ca_path: "/path/to/example-ca.crt"
+    ca_configmap_name: "custom-ca"
+
+    # Ingress TLS
+    ingress_tls_secret: "custom-ingress-cert"
+    ingress_cert_path: "/path/to/cert.crt"   # FULL chain
+    ingress_key_path: "/path/to/cert.key"
+
+  tasks:
+
+    # --------------------------------------------------
+    # Load certificate files
+    # --------------------------------------------------
+    - name: Read root CA certificate
+      slurp:
+        src: "{{ root_ca_path }}"
+      register: root_ca
+
+    - name: Read ingress certificate chain
+      slurp:
+        src: "{{ ingress_cert_path }}"
+      register: ingress_cert
+
+    - name: Read ingress private key
+      slurp:
+        src: "{{ ingress_key_path }}"
+      register: ingress_key
+
+    # --------------------------------------------------
+    # Step 1: Create ConfigMap with ROOT CA only
+    # --------------------------------------------------
+    - name: Create trusted root CA ConfigMap
+      k8s:
+        kubeconfig: "{{ kubeconfig }}"
+        state: present
+        definition:
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: "{{ ca_configmap_name }}"
+            namespace: openshift-config
+          data:
+            ca-bundle.crt: "{{ root_ca.content | b64decode }}"
+
+    # --------------------------------------------------
+    # Step 2: Patch cluster-wide proxy
+    # --------------------------------------------------
+    - name: Patch cluster proxy trusted CA
+      k8s:
+        kubeconfig: "{{ kubeconfig }}"
+        state: present
+        definition:
+          apiVersion: config.openshift.io/v1
+          kind: Proxy
+          metadata:
+            name: cluster
+          spec:
+            trustedCA:
+              name: "{{ ca_configmap_name }}"
+
+    # --------------------------------------------------
+    # Step 3: Create ingress TLS secret (FULL chain + key)
+    # --------------------------------------------------
+    - name: Create ingress TLS secret
+      k8s:
+        kubeconfig: "{{ kubeconfig }}"
+        state: present
+        definition:
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            name: "{{ ingress_tls_secret }}"
+            namespace: openshift-ingress
+          type: kubernetes.io/tls
+          data:
+            tls.crt: "{{ ingress_cert.content }}"
+            tls.key: "{{ ingress_key.content }}"
+
+    # --------------------------------------------------
+    # Step 4: Patch default IngressController
+    # --------------------------------------------------
+    - name: Patch default IngressController certificate
+      k8s:
+        kubeconfig: "{{ kubeconfig }}"
+        state: present
+        definition:
+          apiVersion: operator.openshift.io/v1
+          kind: IngressController
+          metadata:
+            name: default
+            namespace: openshift-ingress-operator
+          spec:
+            defaultCertificate:
+              name: "{{ ingress_tls_secret }}"
+
+    # --------------------------------------------------
+    # Step 5: Wait for router rollout
+    # --------------------------------------------------
+    - name: Wait for router deployment rollout
+      k8s_info:
+        kubeconfig: "{{ kubeconfig }}"
+        kind: Deployment
+        namespace: openshift-ingress
+        name: router-default
+      register: router_info
+      until: >
+        router_info.resources[0].status.availableReplicas
+        == router_info.resources[0].status.replicas
+      retries: 30
+      delay: 10
+
+    # --------------------------------------------------
+    # Verification
+    # --------------------------------------------------
+    - name: Verify proxy trusted CA
+      k8s_info:
+        kubeconfig: "{{ kubeconfig }}"
+        kind: Proxy
+        name: cluster
+      register: proxy_info
+
+    - name: Verify ingress certificate
+      k8s_info:
+        kubeconfig: "{{ kubeconfig }}"
+        kind: IngressController
+        namespace: openshift-ingress-operator
+        name: default
+      register: ingress_info
+
+    - debug:
+        msg:
+          - "Trusted CA ConfigMap: {{ proxy_info.resources[0].spec.trustedCA.name }}"
+          - "Ingress TLS Secret: {{ ingress_info.resources[0].spec.defaultCertificate.name }}"
