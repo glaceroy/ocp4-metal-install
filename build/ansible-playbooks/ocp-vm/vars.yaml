@@ -26,6 +26,7 @@ defaults:
   bootstrap:
     memory: 8192
     cores: 4
+    disk: 40
     cpu: x86-64-v2-AES
     scsihw: virtio-scsi-single
     ignition: "{{ ignition_base_url }}/bootstrap.ign"
@@ -84,3 +85,12 @@ workers:
   - name: worker02
     vmid: 104
     mac: BC:24:11:D7:17:06
+  - name: worker03
+    vmid: 105
+    mac: BC:24:11:2B:93:88
+  - name: worker04
+    vmid: 106
+    mac: BC:24:11:87:37:60
+  - name: worker05
+    vmid: 107
+    mac: BC:24:11:DC:6B:6E
