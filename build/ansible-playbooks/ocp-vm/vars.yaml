@@ -49,9 +49,11 @@ defaults:
 # Templates (ONLY master + worker)
 #---------------------------------------------------
 templates:
-  - role: master
+  - name: rhcos-master-template
+    role: master
     vmid: 9001
-  - role: worker
+  - name: rhcos-worker-template
+    role: worker
     vmid: 9002
       
 #---------------------------------------------------

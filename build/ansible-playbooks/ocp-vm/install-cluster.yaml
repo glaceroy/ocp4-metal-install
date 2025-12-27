@@ -1,17 +1,16 @@
 ---
 # install-cluster.yaml
-- name: Deploy OpenShift CoreOS VMs on Proxmox
+- name: Deploy OpenShift CoreOS VMs on Proxmox from ISO
   hosts: proxmox
   gather_facts: false
   collections:
     - community.proxmox
-
   vars_files:
     - vars.yaml
 
   tasks:
     # --------------------------------------------------
-    # Gather existing Proxmox VMs (idempotency backbone)
+    # Gather existing Proxmox VMs (idempotency)
     # --------------------------------------------------
     - name: Gather existing Proxmox VMs
       community.proxmox.proxmox_vm_info:
@@ -23,49 +22,43 @@
       register: proxmox_vms
 
     - name: Build list of existing VMIDs
-      ansible.builtin.set_fact:
+      set_fact:
         existing_vmids: "{{ proxmox_vms.vms | default([]) | map(attribute='vmid') | list }}"
 
     # --------------------------------------------------
-    # Build template lookup (master / worker)
+    # Combine all nodes into a single loop
     # --------------------------------------------------
-    - name: Build template map
-      ansible.builtin.set_fact:
-        template_map: >-
+    - name: Combine all nodes (bootstrap + masters + workers)
+      set_fact:
+        all_nodes: >-
           {{
-            dict(
-              templates | map(attribute='role')
-              | zip(templates | map(attribute='vmid'))
-            )
+            (bootstrap | map('combine', {'role': 'bootstrap'}) | list)
+            + (masters | map('combine', {'role': 'master'}) | list)
+            + (workers | map('combine', {'role': 'worker'}) | list)
           }}
 
     # --------------------------------------------------
-    # Combine Masters and Workers into one loop
+    # Create all VMs from ISO
     # --------------------------------------------------
-    - name: Combine master and worker node definitions
-      ansible.builtin.set_fact:
-        cluster_nodes: "{{ masters | map('combine', {'role': 'master'}) | list + workers | map('combine', {'role': 'worker'}) | list }}"
-
-    # --------------------------------------------------
-    # Create Cluster VMs (masters + workers)
-    # --------------------------------------------------
-    - name: Clone and configure cluster VMs
+    - name: Create and start all VMs from ISO
       community.proxmox.proxmox_kvm:
         api_host: "{{ ansible_host }}"
         api_user: "{{ api_user }}"
         api_token_id: "{{ api_token_id }}"
         api_token_secret: "{{ api_token_secret }}"
         node: "{{ proxmox_node }}"
-        clone: "{{ template_map[item.role] }}"
         vmid: "{{ item.vmid }}"
         name: "{{ item.name }}"
-        full: true
-        memory: "{{ defaults[item.role].memory }}"
-        cores: "{{ defaults[item.role].cores }}"
-        cpu: "{{ defaults[item.role].cpu }}"
-        scsihw: "{{ defaults[item.role].scsihw }}"
+        memory: >-
+          {{ defaults[item.role].memory if item.role != 'bootstrap' else defaults.bootstrap.memory }}
+        cores: >-
+          {{ defaults[item.role].cores if item.role != 'bootstrap' else defaults.bootstrap.cores }}
+        cpu: >-
+          {{ defaults[item.role].cpu if item.role != 'bootstrap' else defaults.bootstrap.cpu }}
+        scsihw: >-
+          {{ defaults[item.role].scsihw if item.role != 'bootstrap' else defaults.bootstrap.scsihw }}
         net:
-          net0: "virtio={{ item.mac }},bridge={{ bridge }}"
+          net0: "virtio={{ item.mac }},bridge={{ bridge }},firewall=1"
         ide:
           ide2: "{{ rhcos_iso }},media=cdrom"
         boot: "order=scsi0;ide2;net0"
@@ -74,13 +67,13 @@
           scsi0: "{{ storage }}:{{ defaults[item.role].disk | default(40) }},iothread=1"
         ostype: l26
         state: present
-      loop: "{{ cluster_nodes }}"
+      loop: "{{ all_nodes }}"
       when: item.vmid not in existing_vmids
 
     # --------------------------------------------------
-    # Start Cluster VMs
+    # Start all VMs
     # --------------------------------------------------
-    - name: Start all cluster VMs (masters + workers)
+    - name: Ensure all VMs are started
       community.proxmox.proxmox_kvm:
         api_host: "{{ ansible_host }}"
         api_user: "{{ api_user }}"
@@ -89,18 +82,6 @@
         node: "{{ proxmox_node }}"
         vmid: "{{ item.vmid }}"
         state: started
-      loop: "{{ cluster_nodes }}"
+      loop: "{{ all_nodes }}"
 
-    # --------------------------------------------------
-    # Enable firewall everywhere (bootstrap + cluster)
-    # --------------------------------------------------
-    - name: Enable Proxmox firewall on all VMs
-      community.proxmox.proxmox_kvm:
-        api_host: "{{ ansible_host }}"
-        api_user: "{{ api_user }}"
-        api_token_id: "{{ api_token_id }}"
-        api_token_secret: "{{ api_token_secret }}"
-        node: "{{ proxmox_node }}"
-        vmid: "{{ item.vmid }}"
-        firewall: yes
-      loop: "{{ bootstrap + cluster_nodes }}"
+
