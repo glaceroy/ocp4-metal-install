@@ -7,12 +7,7 @@
     install_config_path: "/root/ocp4-metal-install/build/install-config/install-config.yaml"
     output_dir: "/root/ocp-install-config"
     web_dir: "/var/www/html/ocp4"
-
-    install_commands:
-      - name: manifests
-        cmd: "openshift-install create manifests --dir {{ output_dir }}"
-      - name: ignition-configs
-        cmd: "openshift-install create ignition-configs --dir {{ output_dir }}"
+    scheduler_manifest: "{{ output_dir }}/manifests/cluster-scheduler-02-config.yaml"
 
   tasks:
 
@@ -35,18 +30,47 @@
         mode: '0644'
 
     # --------------------------------------------------
-    # Run OpenShift installer steps
+    # Create manifests
     # --------------------------------------------------
-    - name: Run OpenShift installer commands
-      command: "{{ item.cmd }}"
+    - name: Create manifests
+      command: "openshift-install create manifests --dir {{ output_dir }}"
       environment:
         HOME: "{{ ansible_env.HOME }}"
-      register: install_results
-      failed_when: install_results.rc != 0
-      changed_when: "'Creating' in install_results.stdout"
-      loop: "{{ install_commands }}"
-      loop_control:
-        label: "{{ item.name }}"
+      register: manifest_result
+      failed_when: manifest_result.rc != 0
+      changed_when: "'Creating' in manifest_result.stdout"
+
+    # --------------------------------------------------
+    # Disable scheduling on master nodes
+    # --------------------------------------------------
+    - name: Disable scheduling on master nodes
+      lineinfile:
+        path: "{{ scheduler_manifest }}"
+        regexp: '^(\s*)mastersSchedulable:'
+        line: '\1mastersSchedulable: false'
+        backrefs: yes
+      when: scheduler_manifest is defined and scheduler_manifest is file
+
+    # --------------------------------------------------
+    # Show only spec.mastersSchedulable value
+    # --------------------------------------------------
+    - name: Show only spec.mastersSchedulable value
+      command: "grep -o 'mastersSchedulable:.*' {{ scheduler_manifest }}"
+      register: masters_schedulable_value
+      changed_when: false
+    - debug:
+        msg: "{{ masters_schedulable_value.stdout }}"
+
+    # --------------------------------------------------
+    # Create ignition-configs
+    # --------------------------------------------------
+    - name: Create ignition-configs
+      command: "openshift-install create ignition-configs --dir {{ output_dir }}"
+      environment:
+        HOME: "{{ ansible_env.HOME }}"
+      register: ignition_result
+      failed_when: ignition_result.rc != 0
+      changed_when: "'Creating' in ignition_result.stdout"
 
     # --------------------------------------------------
     # Clean and prepare web directory
