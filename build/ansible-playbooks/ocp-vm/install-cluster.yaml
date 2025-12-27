@@ -1,98 +1,86 @@
-# install-cluster.yaml
 ---
+# install-cluster.yaml
 - name: Deploy OpenShift CoreOS VMs on Proxmox
   hosts: proxmox
   gather_facts: false
   collections:
-    - community.proxmox       # use the proxmox collection
+    - community.proxmox
+
   vars_files:
     - vars.yaml
 
   tasks:
+    # --------------------------------------------------
+    # Gather existing Proxmox VMs (idempotency backbone)
+    # --------------------------------------------------
+    - name: Gather existing Proxmox VMs
+      community.proxmox.proxmox_vm_info:
+        api_host: "{{ ansible_host }}"
+        api_user: "{{ api_user }}"
+        api_token_id: "{{ api_token_id }}"
+        api_token_secret: "{{ api_token_secret }}"
+        node: "{{ proxmox_node }}"
+      register: proxmox_vms
+
+    - name: Build list of existing VMIDs
+      ansible.builtin.set_fact:
+        existing_vmids: "{{ proxmox_vms.vms | default([]) | map(attribute='vmid') | list }}"
 
     # --------------------------------------------------
-    # Ensure RHCOS ISO exists
+    # Build template lookup (master / worker)
     # --------------------------------------------------
-#    - name: Check if RHCOS ISO exists
-#      ansible.builtin.stat:
-#        path: "{{ rhcos_iso }}"
-#      register: iso_check
-
-#    - name: Upload RHCOS ISO if missing
-#      ansible.builtin.copy:
-#        src: "{{ rhcos_iso | basename }}"
-#        dest: "{{ rhcos_iso }}"
-#        mode: "0644"
-#      when: not iso_check.stat.exists
+    - name: Build template map
+      ansible.builtin.set_fact:
+        template_map: >-
+          {{
+            dict(
+              templates | map(attribute='role')
+              | zip(templates | map(attribute='vmid'))
+            )
+          }}
 
     # --------------------------------------------------
-    # Create Bootstrap VM from ISO
+    # Combine Masters and Workers into one loop
     # --------------------------------------------------
-    - name: Create bootstrap VMs
+    - name: Combine master and worker node definitions
+      ansible.builtin.set_fact:
+        cluster_nodes: "{{ masters | map('combine', {'role': 'master'}) | list + workers | map('combine', {'role': 'worker'}) | list }}"
+
+    # --------------------------------------------------
+    # Create Cluster VMs (masters + workers)
+    # --------------------------------------------------
+    - name: Clone and configure cluster VMs
       community.proxmox.proxmox_kvm:
         api_host: "{{ ansible_host }}"
         api_user: "{{ api_user }}"
         api_token_id: "{{ api_token_id }}"
         api_token_secret: "{{ api_token_secret }}"
         node: "{{ proxmox_node }}"
+        clone: "{{ template_map[item.role] }}"
         vmid: "{{ item.vmid }}"
         name: "{{ item.name }}"
-        memory: "{{ defaults.bootstrap.memory }}"
-        cores: "{{ defaults.bootstrap.cores }}"
-        cpu: "{{ defaults.bootstrap.cpu }}"
-        net:
-          net0: "virtio={{ item.mac }},bridge={{ bridge }}"
-        ide:
-          ide2: "{{ rhcos_iso }},media=cdrom"
-        boot: "order=scsi0;ide2;net0"
-        bootdisk: scsi0
-        scsihw: "{{ defaults.bootstrap.scsihw }}"
-        scsi:
-          scsi0: "{{ storage }}:{{ defaults.bootstrap.disk }},iothread=1"
-        ostype: l26
-        state: present
-      loop: "{{ bootstrap }}"
-
-    - name: Start bootstrap VMs
-      community.proxmox.proxmox_kvm:
-        api_host: "{{ ansible_host }}"
-        api_user: "{{ api_user }}"
-        api_token_id: "{{ api_token_id }}"
-        api_token_secret: "{{ api_token_secret }}"
-        node: "{{ proxmox_node }}"
-        vmid: "{{ item.vmid }}"
-        state: started
-      loop: "{{ bootstrap }}"
-
-    # --------------------------------------------------
-    # Create Installer VMs for templates
-    # --------------------------------------------------
-    - name: Create installer template VMs
-      community.proxmox.proxmox_kvm:
-        api_host: "{{ ansible_host }}"
-        api_user: "{{ api_user }}"
-        api_token_id: "{{ api_token_id }}"
-        api_token_secret: "{{ api_token_secret }}"
-        node: "{{ proxmox_node }}"
-        vmid: "{{ item.vmid }}"
-        name: "{{ item.name }}"
+        full: true
         memory: "{{ defaults[item.role].memory }}"
         cores: "{{ defaults[item.role].cores }}"
         cpu: "{{ defaults[item.role].cpu }}"
+        scsihw: "{{ defaults[item.role].scsihw }}"
         net:
-          net0: "virtio,bridge={{ bridge }}"
+          net0: "virtio={{ item.mac }},bridge={{ bridge }}"
         ide:
           ide2: "{{ rhcos_iso }},media=cdrom"
         boot: "order=scsi0;ide2;net0"
         bootdisk: scsi0
-        scsihw: "{{ defaults[item.role].scsihw }}"
         scsi:
-          scsi0: "{{ storage }}:{{ item.disk }},iothread=1"
+          scsi0: "{{ storage }}:{{ defaults[item.role].disk | default(40) }},iothread=1"
         ostype: l26
         state: present
-      loop: "{{ templates }}"
+      loop: "{{ cluster_nodes }}"
+      when: item.vmid not in existing_vmids
 
-    - name: Start installer template VMs
+    # --------------------------------------------------
+    # Start Cluster VMs
+    # --------------------------------------------------
+    - name: Start all cluster VMs (masters + workers)
       community.proxmox.proxmox_kvm:
         api_host: "{{ ansible_host }}"
         api_user: "{{ api_user }}"
@@ -101,102 +89,11 @@
         node: "{{ proxmox_node }}"
         vmid: "{{ item.vmid }}"
         state: started
-      loop: "{{ templates }}"
-
-    - name: Boot installer VMs from disk
-      community.proxmox.proxmox_kvm:
-        api_host: "{{ ansible_host }}"
-        api_user: "{{ api_user }}"
-        api_token_id: "{{ api_token_id }}"
-        api_token_secret: "{{ api_token_secret }}"
-        node: "{{ proxmox_node }}"
-        vmid: "{{ item.vmid }}"
-        boot: scsi0
-        state: present
-      loop: "{{ templates }}"
-
-    - name: Wait 2 minutes before stopping installer VMs
-      ansible.builtin.pause:
-        minutes: 2
-
-    - name: Stop installer VMs before converting
-      community.proxmox.proxmox_kvm:
-        api_host: "{{ ansible_host }}"
-        api_user: "{{ api_user }}"
-        api_token_id: "{{ api_token_id }}"
-        api_token_secret: "{{ api_token_secret }}"
-        node: "{{ proxmox_node }}"
-        vmid: "{{ item.vmid }}"
-        state: stopped
-      loop: "{{ templates }}"
-
-    - name: Wait until template installer VMs are fully stopped
-      shell: qm status {{ item.vmid }} | awk '{print $3}'
-      register: template_stop
-      retries: 30
-      delay: 10
-      until: template_stop.stdout.strip() == "stopped"
-      delegate_to: "{{ ansible_host }}"
-      become: true
-      loop: "{{ templates }}"
-
-    - name: Convert installer VMs to templates
-      community.proxmox.proxmox_kvm:
-        api_host: "{{ ansible_host }}"
-        api_user: "{{ api_user }}"
-        api_token_id: "{{ api_token_id }}"
-        api_token_secret: "{{ api_token_secret }}"
-        node: "{{ proxmox_node }}"
-        vmid: "{{ item.vmid }}"
-        template: true
-      loop: "{{ templates }}"
+      loop: "{{ cluster_nodes }}"
 
     # --------------------------------------------------
-    # Clone Master and Worker VMs from templates
+    # Enable firewall everywhere (bootstrap + cluster)
     # --------------------------------------------------
-    - name: Clone Master VMs
-      community.proxmox.proxmox_kvm:
-        api_host: "{{ ansible_host }}"
-        api_user: "{{ api_user }}"
-        api_token_id: "{{ api_token_id }}"
-        api_token_secret: "{{ api_token_secret }}"
-        node: "{{ proxmox_node }}"
-        clone: "{{ master_template_vmid }}"
-        vmid: "{{ item.vmid }}"
-        name: "{{ item.name }}"
-        net:
-          net0: "virtio={{ item.mac }},bridge={{ bridge }}"
-        full: true
-        state: present
-      loop: "{{ masters }}"
-
-    - name: Clone Worker VMs
-      community.proxmox.proxmox_kvm:
-        api_host: "{{ ansible_host }}"
-        api_user: "{{ api_user }}"
-        api_token_id: "{{ api_token_id }}"
-        api_token_secret: "{{ api_token_secret }}"
-        node: "{{ proxmox_node }}"
-        clone: "{{ worker_template_vmid }}"
-        vmid: "{{ item.vmid }}"
-        name: "{{ item.name }}"
-        net:
-          net0: "virtio={{ item.mac }},bridge={{ bridge }}"
-        full: true
-        state: present
-      loop: "{{ workers }}"
-
-    - name: Start all Master VMs
-      community.proxmox.proxmox_kvm:
-        api_host: "{{ ansible_host }}"
-        api_user: "{{ api_user }}"
-        api_token_id: "{{ api_token_id }}"
-        api_token_secret: "{{ api_token_secret }}"
-        node: "{{ proxmox_node }}"
-        vmid: "{{ item.vmid }}"
-        state: started
-      loop: "{{ masters }}"
-
     - name: Enable Proxmox firewall on all VMs
       community.proxmox.proxmox_kvm:
         api_host: "{{ ansible_host }}"
@@ -206,4 +103,4 @@
         node: "{{ proxmox_node }}"
         vmid: "{{ item.vmid }}"
         firewall: yes
-      loop: "{{ bootstrap + masters + workers }}"
+      loop: "{{ bootstrap + cluster_nodes }}"
