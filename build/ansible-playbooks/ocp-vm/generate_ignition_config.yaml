@@ -7,7 +7,7 @@
     install_config_path: "/root/ocp4-metal-install/build/install-config/install-config.yaml"
     output_dir: "/root/ocp-install-config"
     web_dir: "/var/www/html/ocp4"
-    scheduler_manifest: "{{ output_dir }}/manifests/cluster-scheduler-02-config.yaml"
+    scheduler_manifest: "{{ output_dir }}/manifests/cluster-scheduler-02-config.yml"
 
   tasks:
 
