@@ -1,0 +1,67 @@
+---
+- name: Stop and destroy OpenShift VMs on Proxmox
+  hosts: proxmox
+  gather_facts: false
+  collections:
+    - community.proxmox
+  vars_files:
+    - vars.yaml
+
+  tasks:
+    # --------------------------------------------------
+    # Gather existing Proxmox VMs
+    # --------------------------------------------------
+    - name: Gather existing Proxmox VMs
+      community.proxmox.proxmox_vm_info:
+        api_host: "{{ ansible_host }}"
+        api_user: "{{ api_user }}"
+        api_token_id: "{{ api_token_id }}"
+        api_token_secret: "{{ api_token_secret }}"
+        node: "{{ proxmox_node }}"
+      register: proxmox_vms
+
+    - name: Build list of existing VMIDs
+      set_fact:
+        existing_vmids: "{{ proxmox_vms.vms | default([]) | map(attribute='vmid') | list }}"
+
+    # --------------------------------------------------
+    # Combine all nodes into a single loop
+    # --------------------------------------------------
+    - name: Combine all nodes (bootstrap + masters + workers)
+      set_fact:
+        all_nodes: >-
+          {{
+            (bootstrap | map('combine', {'role': 'bootstrap'}) | list)
+            + (masters | map('combine', {'role': 'master'}) | list)
+            + (workers | map('combine', {'role': 'worker'}) | list)
+          }}
+
+    # --------------------------------------------------
+    # Stop all VMs
+    # --------------------------------------------------
+    - name: Stop all VMs
+      community.proxmox.proxmox_kvm:
+        api_host: "{{ ansible_host }}"
+        api_user: "{{ api_user }}"
+        api_token_id: "{{ api_token_id }}"
+        api_token_secret: "{{ api_token_secret }}"
+        node: "{{ proxmox_node }}"
+        vmid: "{{ item.vmid }}"
+        state: stopped
+      loop: "{{ all_nodes }}"
+      when: item.vmid in existing_vmids
+
+    # --------------------------------------------------
+    # Destroy all VMs
+    # --------------------------------------------------
+    - name: Destroy all VMs
+      community.proxmox.proxmox_kvm:
+        api_host: "{{ ansible_host }}"
+        api_user: "{{ api_user }}"
+        api_token_id: "{{ api_token_id }}"
+        api_token_secret: "{{ api_token_secret }}"
+        node: "{{ proxmox_node }}"
+        vmid: "{{ item.vmid }}"
+        state: absent
+      loop: "{{ all_nodes }}"
+      when: item.vmid in existing_vmids

@@ -47,3 +47,4 @@
       ansible.builtin.command:
         cmd: nmcli connection up "{{ external_interface }}"
       changed_when: false
+
