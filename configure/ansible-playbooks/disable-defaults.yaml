@@ -1,0 +1,67 @@
+---
+- name: Disable Insights Operator and default OperatorHub sources for disconnected environment
+  hosts: localhost
+  gather_facts: false
+
+  vars:
+    kubeconfig: /root/.kube/config
+
+  tasks:
+    # --------------------------------------------------
+    # Disable Insights Operator
+    # --------------------------------------------------
+    - name: Disable Insights operator
+      command: >
+        oc patch insightsoperators.operator.openshift.io  cluster
+        --type=merge
+        -p '{"spec":{"managementState":"Unmanaged"}}'
+      register: insights_patch
+      changed_when: "'patched' in insights_patch.stdout or insights_patch.rc == 0"
+
+    # --------------------------------------------------
+    # Disable default OperatorHub sources (optional)
+    # --------------------------------------------------
+    - name: Disable default OperatorHub sources
+      command: >
+        oc patch operatorhub cluster
+        --type=merge
+        -p '{"spec":{"disableAllDefaultSources": true}}'
+      register: operatorhub_result
+      changed_when: "'patched' in operatorhub_result.stdout or operatorhub_result.rc == 0"
+
+    # --------------------------------------------------
+    # Verify Insights Operator status
+    # --------------------------------------------------
+    - name: Verify Insights operator state
+      k8s_info:
+        kubeconfig: "{{ kubeconfig }}"
+        api_version: operator.openshift.io/v1
+        kind: InsightsOperator
+        name: cluster
+      register: insights
+
+    - debug:
+        msg: "Insights managementState = {{ insights.resources[0].spec.managementState }}"
+
+    # --------------------------------------------------
+    # Set cluster upgrade channel to empty
+    # --------------------------------------------------
+    - name: Set ClusterVersion channel to empty
+      command: >
+        oc patch clusterversion version
+        --type=merge
+        -p '{"spec":{"channel":""}}'
+      register: channel_patch
+      changed_when: "'patched' in channel_patch.stdout or channel_patch.rc == 0"
+
+    # --------------------------------------------------
+    # Verification
+    # --------------------------------------------------
+    - name: Verify cluster upgrade channel
+      command: >
+        oc get clusterversion version
+        -o jsonpath='{.spec.channel}{"\n"}'
+      register: channel_state
+
+    - debug:
+        msg: "Cluster upgrade channel is set to: '{{ channel_state.stdout }}'"

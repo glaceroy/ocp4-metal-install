@@ -1,19 +1,25 @@
 ---
-- name: Configure OpenShift trusted root CA and ingress certificate (k8s module)
+- name: Configure OpenShift trusted root CA and ingress certificate (validated & safe)
   hosts: localhost
   gather_facts: false
 
   vars:
     kubeconfig: "/root/.kube/config"
+    cert_path: "/root/ocp4-metal-install/configure/certs/default_ingress/certs"
 
     # Root CA (ONLY)
-    root_ca_path: "/path/to/example-ca.crt"
+    root_ca_path: "{{ cert_path }}/root.crt"
     ca_configmap_name: "custom-ca"
 
     # Ingress TLS
     ingress_tls_secret: "custom-ingress-cert"
-    ingress_cert_path: "/path/to/cert.crt"   # FULL chain
-    ingress_key_path: "/path/to/cert.key"
+    ingress_cert_path: "{{ cert_path }}/ingress.crt"
+    ingress_key_path: "{{ cert_path }}/ingress.key"
+
+    newline: "\n"
+
+  environment:
+    KUBECONFIG: "{{ kubeconfig }}"
 
   tasks:
 
@@ -36,6 +42,79 @@
       register: ingress_key
 
     # --------------------------------------------------
+    # Normalize PEM files (ensure single trailing newline)
+    # --------------------------------------------------
+    - name: Normalize root CA PEM
+      set_fact:
+        root_ca_pem: >-
+          {{ (root_ca.content | b64decode | regex_replace('\n*$', '')) ~ newline }}
+
+    - name: Normalize ingress certificate PEM
+      set_fact:
+        ingress_cert_pem: >-
+          {{ (ingress_cert.content | b64decode | regex_replace('\n*$', '')) ~ newline }}
+
+    - name: Normalize ingress private key PEM
+      set_fact:
+        ingress_key_pem: >-
+          {{ (ingress_key.content | b64decode | regex_replace('\n*$', '')) ~ newline }}
+
+    # --------------------------------------------------
+    # Preflight validation (FAIL FAST)
+    # --------------------------------------------------
+    - name: Validate ingress certificate PEM format
+      command: openssl x509 -noout
+      args:
+        stdin: "{{ ingress_cert_pem }}"
+      register: cert_check
+      failed_when: cert_check.rc != 0
+
+    - name: Validate ingress private key PEM format
+      command: openssl pkey -noout
+      args:
+        stdin: "{{ ingress_key_pem }}"
+      register: key_check
+      failed_when: key_check.rc != 0
+
+    - name: Ensure private key is NOT encrypted
+      command: openssl pkey -in /dev/stdin -noout
+      args:
+        stdin: "{{ ingress_key_pem }}"
+      register: encrypted_key_check
+      failed_when: "'Enter pass phrase' in encrypted_key_check.stderr"
+
+    # --------------------------------------------------
+    # Verify certificate and key match using public key hash
+    # (works for RSA and ECDSA)
+    # --------------------------------------------------
+    - name: Extract public key from certificate
+      command: openssl x509 -noout -pubkey
+      args:
+        stdin: "{{ ingress_cert_pem }}"
+      register: cert_pubkey
+
+    - name: Extract public key from private key
+      command: openssl pkey -pubout
+      args:
+        stdin: "{{ ingress_key_pem }}"
+      register: key_pubkey
+
+    - name: Hash certificate public key
+      shell: |
+        echo "{{ cert_pubkey.stdout }}" | openssl sha256
+      register: cert_pubkey_hash
+
+    - name: Hash private key public key
+      shell: |
+        echo "{{ key_pubkey.stdout }}" | openssl sha256
+      register: key_pubkey_hash
+
+    - name: Fail if certificate and private key do not match
+      fail:
+        msg: "Ingress certificate and private key DO NOT match"
+      when: cert_pubkey_hash.stdout != key_pubkey_hash.stdout
+
+    # --------------------------------------------------
     # Step 1: Create ConfigMap with ROOT CA only
     # --------------------------------------------------
     - name: Create trusted root CA ConfigMap
@@ -49,7 +128,7 @@
             name: "{{ ca_configmap_name }}"
             namespace: openshift-config
           data:
-            ca-bundle.crt: "{{ root_ca.content | b64decode }}"
+            ca-bundle.crt: "{{ root_ca_pem }}"
 
     # --------------------------------------------------
     # Step 2: Patch cluster-wide proxy
@@ -68,7 +147,7 @@
               name: "{{ ca_configmap_name }}"
 
     # --------------------------------------------------
-    # Step 3: Create ingress TLS secret (FULL chain + key)
+    # Step 3: Create ingress TLS secret
     # --------------------------------------------------
     - name: Create ingress TLS secret
       k8s:
@@ -82,8 +161,8 @@
             namespace: openshift-ingress
           type: kubernetes.io/tls
           data:
-            tls.crt: "{{ ingress_cert.content }}"
-            tls.key: "{{ ingress_key.content }}"
+            tls.crt: "{{ ingress_cert_pem | b64encode }}"
+            tls.key: "{{ ingress_key_pem | b64encode }}"
 
     # --------------------------------------------------
     # Step 4: Patch default IngressController

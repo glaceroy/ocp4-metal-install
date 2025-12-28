@@ -1,7 +1,7 @@
 apiVersion: operators.coreos.com/v1alpha1
 kind: CatalogSource
 metadata:
-  name: cs-redhat-operator-index-v4-18
+  name: cs-redhat-operator
   namespace: openshift-marketplace
 spec:
   image: registry.cloud.lab:8443/redhat/redhat-operator-index:v4.18
@@ -11,7 +11,7 @@ status: {}
 apiVersion: olm.operatorframework.io/v1
 kind: ClusterCatalog
 metadata:
-  name: cc-redhat-operator-index-v4-18
+  name: cc-redhat-operator
 spec:
   priority: 0
   source:
