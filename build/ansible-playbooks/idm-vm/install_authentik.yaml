@@ -1,26 +1,27 @@
 ---
-- name: Install Authentik via Docker Compose with HTTPS on CentOS 9
+- name: Install Authentik via Docker Compose with HTTPS
   hosts: 127.0.0.1
   connection: local
   become: yes
   gather_facts: yes
 
   vars:
+    authentik_admin_user: "akadmin"
+    admin_password: "aiyaz123"
     authentik_root: "/opt/authentik"
     docker_compose_url: "https://docs.goauthentik.io/docker-compose.yml"
     env_file: "{{ authentik_root }}/.env"
-
     authentik_dir: "/root/ocp4-metal-install/configure/certs/idm/certs"
     tls_cert_src: "{{ authentik_dir }}/idm.crt"
     tls_key_src: "{{ authentik_dir }}/idm.key"
     tls_cert_dest: "{{ authentik_root }}/certs/authentik.crt"
     tls_key_dest: "{{ authentik_root }}/certs/authentik.key"
-
     pg_pass_length: 36
     secret_key_length: 60
+    authentik_port: 9443
+    authentik_host: "idm.cloud.lab"
 
   tasks:
-
     # --------------------------------------------------
     # Ensure directories
     # --------------------------------------------------
@@ -37,9 +38,9 @@
         - "{{ authentik_root }}/data"
 
     # --------------------------------------------------
-    # Install Docker CE
+    # Install Docker CE (RHEL/CentOS)
     # --------------------------------------------------
-    - name: Install required packages
+    - name: Install Docker prerequisites
       dnf:
         name:
           - yum-utils
@@ -48,16 +49,17 @@
         state: present
 
     - name: Add Docker CE repository
-      command: dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
-      args:
-        creates: /etc/yum.repos.d/docker-ce.repo
+      get_url:
+        url: https://download.docker.com/linux/centos/docker-ce.repo
+        dest: /etc/yum.repos.d/docker-ce.repo
 
-    - name: Install Docker CE
+    - name: Install Docker CE and Compose plugin
       dnf:
         name:
           - docker-ce
           - docker-ce-cli
           - containerd.io
+          - docker-compose-plugin
         state: present
 
     - name: Enable and start Docker service
@@ -67,37 +69,16 @@
         enabled: yes
 
     # --------------------------------------------------
-    # Install Docker Compose v2
-    # --------------------------------------------------
-    - name: Download Docker Compose v2
-      get_url:
-        url: "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64"
-        dest: /usr/local/bin/docker-compose
-        mode: "0755"
-
-    # --------------------------------------------------
-    # Download official docker-compose.yml
-    # --------------------------------------------------
-    - name: Download docker-compose.yml
-      get_url:
-        url: "{{ docker_compose_url }}"
-        dest: "{{ authentik_root }}/docker-compose.yml"
-        mode: '0644'
-
-    # --------------------------------------------------
     # Copy TLS certificate and key
     # --------------------------------------------------
-    - name: Copy TLS certificate
+    - name: Copy TLS certificate and key
       copy:
-        src: "{{ tls_cert_src }}"
-        dest: "{{ tls_cert_dest }}"
-        mode: '0644'
-
-    - name: Copy TLS key
-      copy:
-        src: "{{ tls_key_src }}"
-        dest: "{{ tls_key_dest }}"
-        mode: '0600'
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        mode: "{{ item.mode }}"
+      loop:
+        - { src: "{{ tls_cert_src }}", dest: "{{ tls_cert_dest }}", mode: '0644' }
+        - { src: "{{ tls_key_src }}", dest: "{{ tls_key_dest }}", mode: '0600' }
 
     # --------------------------------------------------
     # Generate secrets for .env
@@ -118,27 +99,73 @@
         content: |
           PG_PASS={{ pg_pass.stdout }}
           AUTHENTIK_SECRET_KEY={{ secret_key.stdout }}
-          AUTHENTIK_HTTPS_CERT_FILE=/app/certs/authentik.crt
-          AUTHENTIK_HTTPS_KEY_FILE=/app/certs/authentik.key
+          AUTHENTIK_HTTPS=True
+          AUTHENTIK_HTTPS_CERT=/certs/authentik.crt
+          AUTHENTIK_HTTPS_KEY=/certs/authentik.key
         mode: '0600'
 
     # --------------------------------------------------
-    # Pull images with retry
+    # Download and modify docker-compose.yml
+    # --------------------------------------------------
+    - name: Download docker-compose.yml
+      get_url:
+        url: "{{ docker_compose_url }}"
+        dest: "{{ authentik_root }}/docker-compose.yml"
+        mode: '0644'
+
+    - name: Add certs volume mount to authentik server service
+      replace:
+        path: "{{ authentik_root }}/docker-compose.yml"
+        regexp: '(\s+server:\s+\n\s+image:.*\n)(\s+)(?!.*volumes:)'
+        replace: '\1\2  volumes:\n\2    - ./certs:/certs:ro\n'
+      register: compose_modified
+
+    # --------------------------------------------------
+    # Pull and start Authentik stack
     # --------------------------------------------------
     - name: Pull Authentik Docker images
-      command: docker-compose pull
+      shell: docker-compose pull
       args:
         chdir: "{{ authentik_root }}"
-      retries: 5
-      delay: 10
-      register: pull_status
-      until: pull_status.rc == 0
 
-    # --------------------------------------------------
-    # Start Authentik stack
-    # --------------------------------------------------
     - name: Start Authentik containers
-      command: docker-compose up -d
+      shell: docker-compose up -d
       args:
         chdir: "{{ authentik_root }}"
 
+    # --------------------------------------------------
+    # Wait for containers to be healthy
+    # --------------------------------------------------
+    - name: Wait for server container
+      shell: docker-compose ps --services --filter "status=running" server
+      args:
+        chdir: "{{ authentik_root }}"
+      register: server_status
+      retries: 30
+      delay: 10
+      until: server_status.stdout != ""
+      changed_when: false
+
+    - name: Wait for worker container
+      shell: docker-compose ps --services --filter "status=running" worker
+      args:
+        chdir: "{{ authentik_root }}"
+      register: worker_status
+      retries: 30
+      delay: 10
+      until: worker_status.stdout != ""
+      changed_when: false
+
+    # --------------------------------------------------
+    # Display completion information
+    # --------------------------------------------------
+    - name: Show Authentik access information
+      debug:
+        msg:
+          - "=== Authentik Installation Complete ==="
+          - "HTTPS URL: https://{{ authentik_host }}:{{ authentik_port }}/if/flow/initial-setup/"
+          - "Admin user: {{ authentik_admin_user }}"
+          - "Set password via web interface above"
+          - "PostgreSQL password: {{ pg_pass.stdout }}"
+          - "Secret key stored in: {{ env_file }}"
+      no_log: false
