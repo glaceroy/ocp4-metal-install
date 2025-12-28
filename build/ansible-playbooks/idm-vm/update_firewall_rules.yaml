@@ -6,6 +6,7 @@
   vars:
     firewalld_ports:
       - { port: "8200/tcp" } # Vault UI Port
+      - { port: "9443/tcp" } # Authentik HTTPS Port
 
   tasks:
     - name: Enable firewalld ports

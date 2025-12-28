@@ -1,0 +1,24 @@
+# master_playbook.yml
+- hosts: 127.0.0.1
+  connection: local
+  become: true
+
+  tasks:
+    - name: Setup Network Interfaces
+      ansible.builtin.include_playbook: setup_network_interface.yaml
+    
+    - name: Install Terraform
+      ansible.builtin.include_playbook: install_terraform.yaml
+
+    - name: Install Vault
+      ansible.builtin.include_playbook: install_vault.yaml
+
+    - name: Unseal Vault
+      ansible.builtin.include_playbook: unseal_vault.yaml
+
+    - name: Install Authentik
+      ansible.builtin.include_playbook: install_authentik.yaml
+
+    - name: Update Firewall Rules
+      ansible.builtin.include_playbook: update_firewall_rules.yaml
+

@@ -15,3 +15,5 @@
         - dhcpd
         - haproxy
         - nfs-server
+        - chronyd
+        - firewalld

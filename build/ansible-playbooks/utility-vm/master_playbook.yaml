@@ -22,3 +22,6 @@
     - name: Restart Necessary Services
       ansible.builtin.include_playbook: restart_services.yaml
 
+    - name: Check Services are Enabled and Running
+      ansible.builtin.include_playbook: check_services.yaml
+
