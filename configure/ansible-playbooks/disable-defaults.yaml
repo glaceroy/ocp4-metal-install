@@ -8,15 +8,71 @@
 
   tasks:
     # --------------------------------------------------
-    # Disable Insights Operator
+    # Extract pull-secret to local directory
     # --------------------------------------------------
-    - name: Disable Insights operator
-      command: >
-        oc patch insightsoperators.operator.openshift.io  cluster
-        --type=merge
-        -p '{"spec":{"managementState":"Unmanaged"}}'
-      register: insights_patch
-      changed_when: "'patched' in insights_patch.stdout or insights_patch.rc == 0"
+    - name: Create temporary working directory
+      tempfile:
+        state: directory
+        suffix: pull-secret
+      register: temp_dir
+
+    - name: Extract pull-secret to local directory
+      shell: |
+        oc extract secret/pull-secret -n openshift-config --to={{ temp_dir.path }}
+      args:
+        creates: "{{ temp_dir.path }}/.dockerconfigjson"
+
+    # --------------------------------------------------
+    # Read and modify .dockerconfigjson
+    # --------------------------------------------------
+    - name: Read .dockerconfigjson content
+      slurp:
+        src: "{{ temp_dir.path }}/.dockerconfigjson"
+      register: docker_config
+
+    - name: Decode docker config JSON
+      set_fact:
+        docker_config_json: "{{ (docker_config.content | b64decode | from_json).auths }}"
+
+    # --------------------------------------------------
+    # Remove cloud.openshift.com using dict filter (compatible with Ansible 2.15)
+    # --------------------------------------------------
+    - name: Remove cloud.openshift.com from auths
+      set_fact:
+        cleaned_auths: "{{ docker_config_json | dict2items | rejectattr('key', 'match', 'cloud.openshift.com') | items2dict }}"
+
+    - name: Rebuild complete docker config
+      set_fact:
+        cleaned_config: >-
+          {{
+            {
+              'auths': cleaned_auths
+            }
+          }}
+
+    # --------------------------------------------------
+    # Update the pull-secret in cluster
+    # --------------------------------------------------
+    - name: Update global pull-secret in cluster
+      k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            name: pull-secret
+            namespace: openshift-config
+          type: kubernetes.io/dockerconfigjson
+          data:
+            .dockerconfigjson: "{{ (cleaned_config | to_json) | b64encode }}"
+
+    # --------------------------------------------------
+    # Cleanup
+    # --------------------------------------------------
+    - name: Cleanup temporary files
+      file:
+        path: "{{ temp_dir.path }}"
+        state: absent
 
     # --------------------------------------------------
     # Disable default OperatorHub sources (optional)
@@ -28,20 +84,6 @@
         -p '{"spec":{"disableAllDefaultSources": true}}'
       register: operatorhub_result
       changed_when: "'patched' in operatorhub_result.stdout or operatorhub_result.rc == 0"
-
-    # --------------------------------------------------
-    # Verify Insights Operator status
-    # --------------------------------------------------
-    - name: Verify Insights operator state
-      k8s_info:
-        kubeconfig: "{{ kubeconfig }}"
-        api_version: operator.openshift.io/v1
-        kind: InsightsOperator
-        name: cluster
-      register: insights
-
-    - debug:
-        msg: "Insights managementState = {{ insights.resources[0].spec.managementState }}"
 
     # --------------------------------------------------
     # Set cluster upgrade channel to empty

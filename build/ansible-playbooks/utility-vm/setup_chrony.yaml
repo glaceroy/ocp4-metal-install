@@ -1,0 +1,116 @@
+---
+- name: Configure utility.cloud.lab as Chrony NTP server
+  hosts: 127.0.0.1
+  connection: local
+  become: true
+  gather_facts: true
+
+  vars:
+    allowed_networks:
+      - "10.10.0.0/16"   # OpenShift nodes cidr
+    ntp_servers:
+      - "0.pool.ntp.org iburst"
+      - "1.pool.ntp.org iburst"
+      - "2.pool.ntp.org iburst"
+      - "3.pool.ntp.org iburst"
+    chrony_conf_path: /etc/chrony.conf
+    chrony_service: chronyd
+
+  tasks:
+
+    # --------------------------------------------------
+    # Install chrony package
+    # --------------------------------------------------
+    - name: Install chrony
+      package:
+        name: chrony
+        state: present
+
+    # --------------------------------------------------
+    # Backup existing chrony.conf
+    # --------------------------------------------------
+    - name: Backup original chrony.conf
+      copy:
+        src: "{{ chrony_conf_path }}"
+        dest: "{{ chrony_conf_path }}.bak"
+        remote_src: yes
+        owner: root
+        group: root
+        mode: '0644'
+      when: not lookup('file', chrony_conf_path + '.bak', errors='ignore')
+
+    # --------------------------------------------------
+    # Append upstream NTP servers
+    # --------------------------------------------------
+    - name: Add upstream NTP servers
+      blockinfile:
+        path: "{{ chrony_conf_path }}"
+        block: |
+          # Upstream NTP servers
+          {% for server in ntp_servers %}
+          server {{ server }}
+          {% endfor %}
+        marker: "# {mark} ANSIBLE MANAGED NTP SERVERS"
+      notify: Restart chronyd
+
+    # --------------------------------------------------
+    # Allow OpenShift cluster networks
+    # --------------------------------------------------
+    - name: Allow OpenShift networks in chrony.conf
+      blockinfile:
+        path: "{{ chrony_conf_path }}"
+        block: |
+          # Allow OpenShift nodes to sync time
+          {% for net in allowed_networks %}
+          allow {{ net }}
+          {% endfor %}
+        marker: "# {mark} ANSIBLE MANAGED ALLOW NETWORKS"
+      notify: Restart chronyd
+
+    # --------------------------------------------------
+    # Enable and start chrony service
+    # --------------------------------------------------
+    - name: Enable and start chrony
+      service:
+        name: "{{ chrony_service }}"
+        state: started
+        enabled: yes
+
+    # --------------------------------------------------
+    # Open firewall UDP 123 port
+    # --------------------------------------------------
+    - name: Open NTP port in firewalld
+      firewalld:
+        service: ntp
+        permanent: yes
+        state: enabled
+        immediate: yes
+      notify: Reload firewalld
+
+    # --------------------------------------------------
+    # Verification
+    # --------------------------------------------------
+    - name: Show chrony sources
+      command: chronyc sources
+      register: chrony_sources
+      changed_when: false
+
+    - debug:
+        msg: "{{ chrony_sources.stdout_lines }}"
+
+    - name: Show chrony tracking
+      command: chronyc tracking
+      register: chrony_tracking
+      changed_when: false
+
+    - debug:
+        msg: "{{ chrony_tracking.stdout_lines }}"
+
+  handlers:
+    - name: Restart chronyd
+      service:
+        name: "{{ chrony_service }}"
+        state: restarted
+
+    - name: Reload firewalld
+      command: firewall-cmd --reload

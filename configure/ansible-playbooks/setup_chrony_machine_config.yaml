@@ -1,0 +1,58 @@
+---
+- name: Configure OpenShift to use utility.cloud.lab NTP server
+  hosts: localhost
+  vars:
+    chrony_conf: |
+      server utility.cloud.lab iburst
+      server 0.pool.ntp.org iburst
+      server 1.pool.ntp.org iburst
+      driftfile /var/lib/chrony/drift
+      rtcsync
+      makestep 1.0 3
+      logdir /var/log/chrony
+    chrony_base64: "{{ chrony_conf | b64encode }}"
+
+  tasks:
+    - name: Create master chrony MachineConfig
+      k8s:
+        state: present
+        definition:
+          apiVersion: machineconfiguration.openshift.io/v1
+          kind: MachineConfig
+          metadata:
+            name: 99-master-chrony-utility-server
+            labels:
+              machineconfiguration.openshift.io/role: master
+          spec:
+            config:
+              ignition:
+                version: 3.2.0
+              storage:
+                files:
+                - contents:
+                    source: "data:text/plain;charset=utf-8;base64,{{ chrony_base64 }}"
+                  mode: 0644
+                  overwrite: true
+                  path: /etc/chrony.conf
+
+    - name: Create worker chrony MachineConfig
+      k8s:
+        state: present
+        definition:
+          apiVersion: machineconfiguration.openshift.io/v1
+          kind: MachineConfig
+          metadata:
+            name: 99-worker-chrony-utility-server
+            labels:
+              machineconfiguration.openshift.io/role: worker
+          spec:
+            config:
+              ignition:
+                version: 3.2.0
+              storage:
+                files:
+                - contents:
+                    source: "data:text/plain;charset=utf-8;base64,{{ chrony_base64 }}"
+                  mode: 0644
+                  overwrite: true
+                  path: /etc/chrony.conf

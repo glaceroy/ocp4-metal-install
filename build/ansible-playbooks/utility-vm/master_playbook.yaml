@@ -16,6 +16,9 @@
     - name: Configure Firewall Services
       ansible.builtin.include_playbook: configure_firewall.yaml
 
+    - name: Setup Chrony Service
+      ansible.builtin.include_playbook: setup_chrony.yaml
+
     - name: Restart Necessary Services
       ansible.builtin.include_playbook: restart_services.yaml
 
