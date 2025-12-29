@@ -1,0 +1,44 @@
+---
+- name: Configure OpenShift Image Registry with PVC storage
+  hosts: localhost
+  gather_facts: false
+
+  vars:
+    registry_namespace: openshift-image-registry
+    pvc_name: image-registry-storage
+    storage_class: ""          # leave empty to use default SC
+    storage_size: 10Gi
+    access_modes:
+      - ReadWriteOnce
+
+  tasks:
+    - name: Create PVC for image registry
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: PersistentVolumeClaim
+          metadata:
+            name: "{{ pvc_name }}"
+            namespace: "{{ registry_namespace }}"
+          spec:
+            accessModes: "{{ access_modes }}"
+            resources:
+              requests:
+                storage: "{{ storage_size }}"
+            {{- '' if storage_class == '' else '' }}
+            storageClassName: "{{ storage_class | default(omit) }}"
+
+    - name: Patch image registry to use PVC
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: imageregistry.operator.openshift.io/v1
+          kind: Config
+          metadata:
+            name: cluster
+          spec:
+            managementState: Managed
+            storage:
+              pvc:
+                claim: "{{ pvc_name }}"
