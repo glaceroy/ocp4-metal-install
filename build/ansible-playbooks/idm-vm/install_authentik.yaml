@@ -14,8 +14,8 @@
     authentik_dir: "/root/ocp4-metal-install/configure/certs/idm/certs"
     tls_cert_src: "{{ authentik_dir }}/idm.crt"
     tls_key_src: "{{ authentik_dir }}/idm.key"
-    tls_cert_dest: "{{ authentik_root }}/certs/authentik.crt"
-    tls_key_dest: "{{ authentik_root }}/certs/authentik.key"
+    tls_cert_dest: "{{ authentik_root }}/certs/fullchain.pem"
+    tls_key_dest: "{{ authentik_root }}/certs/privkey.pem"
     pg_pass_length: 36
     secret_key_length: 60
     authentik_port: 9443
@@ -100,8 +100,8 @@
           PG_PASS={{ pg_pass.stdout }}
           AUTHENTIK_SECRET_KEY={{ secret_key.stdout }}
           AUTHENTIK_HTTPS=True
-          AUTHENTIK_HTTPS_CERT=/certs/authentik.crt
-          AUTHENTIK_HTTPS_KEY=/certs/authentik.key
+          AUTHENTIK_HTTPS_CERT=/certs/fullchain.pem
+          AUTHENTIK_HTTPS_KEY=/certs/privkey.pem
         mode: '0600'
 
     # --------------------------------------------------
