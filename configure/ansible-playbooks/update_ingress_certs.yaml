@@ -13,7 +13,7 @@
 
     # Ingress TLS
     ingress_tls_secret: "custom-ingress-cert"
-    ingress_cert_path: "{{ cert_path }}/ingress.crt"
+    ingress_cert_path: "{{ cert_path }}/fullchain.crt" # This file should contain the cert, intermediate and root in that order
     ingress_key_path: "{{ cert_path }}/ingress.key"
 
     newline: "\n"
@@ -149,6 +149,7 @@
     # --------------------------------------------------
     # Step 3: Create ingress TLS secret
     # --------------------------------------------------
+    # If the tls.crt doesnt contain the full chain (cert + intermediates + root), this may cause issues
     - name: Create ingress TLS secret
       k8s:
         kubeconfig: "{{ kubeconfig }}"

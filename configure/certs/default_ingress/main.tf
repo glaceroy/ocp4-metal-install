@@ -52,3 +52,13 @@ resource "local_file" "ca_chain" {
   content  = vault_pki_secret_backend_cert.cert.ca_chain
   filename = "certs/ca_chain.crt"
 }
+
+# Create full chain for OpenShift ingress (leaf + intermediates + root)
+resource "local_file" "fullchain_cert" {
+  content = join("\n", concat(
+    [vault_pki_secret_backend_cert.cert.certificate],
+    vault_pki_secret_backend_cert.cert.ca_chain
+  ))
+
+  filename = "certs/fullchain.crt"
+}
