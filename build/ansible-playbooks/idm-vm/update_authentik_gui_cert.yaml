@@ -1,0 +1,61 @@
+# Update Authentik GUI Certificate Playbook
+# https://github.com/goauthentik/authentik/issues/5888#issuecomment-2695487289
+---
+---
+- name: Configure Authentik Brand Web Certificate (Service Account)
+  hosts: 127.0.0.1
+  connection: local
+  become: yes
+  gather_facts: no
+  vars:
+    authentik_url: "https://idm.cloud.lab:9443"
+
+  tasks:
+    - name: Create service account token (manual step first)
+      debug:
+        msg:
+          - "MANUAL STEP REQUIRED:"
+          - "1. Login to Authentik UI as akadmin"
+          - "2. System → Service Accounts → Create"
+          - "3. Name: ansible-service-account"
+          - "4. Create Token → Copy token value"
+          - "5. Rerun playbook with token below"
+      when: ak_token is not defined
+
+    - name: Update brand web certificate (provide token)
+      uri:
+        url: "{{ authentik_url }}/api/v3/core/brands/?name=authentik-default"
+        headers:
+          Authorization: "Bearer YOUR_SERVICE_TOKEN_HERE"  # Paste token here!
+        validate_certs: no
+      register: brand
+
+    - name: Get certificate ID
+      uri:
+        url: "{{ authentik_url }}/api/v3/crypto/certificatekeypairs/?name__icontains=idm"
+        headers:
+          Authorization: "Bearer YOUR_SERVICE_TOKEN_HERE"
+        validate_certs: no
+      register: cert
+
+    - name: Apply certificate to brand
+      uri:
+        url: "{{ authentik_url }}/api/v3/core/brands/{{ brand.json.results[0].pk }}/"
+        method: PATCH
+        headers:
+          Authorization: "Bearer YOUR_SERVICE_TOKEN_HERE"
+          Content-Type: "application/json"
+        body_format: json
+        body:
+          web_certificate: "{{ cert.json.results[0].pk }}"
+        validate_certs: no
+        status_code: [200, 201]
+
+    - name: Restart services
+      shell: docker-compose restart server worker
+      args:
+        chdir: /opt/authentik
+
+    - name: Success
+      debug:
+        msg: "✅ Brand certificate updated!"

@@ -1,0 +1,11 @@
+# Update Authentik GUI Certificate Playbook
+# https://github.com/goauthentik/authentik/issues/5888#issuecomment-2695487289
+
+1. The imported certs shoudl be available under System -> certificates
+2. Delete the default brand under System -> Brands
+3. Create a new brand and set it as default
+4. Go to Other global settings and set web certificate to the new cert
+5. Restart authentik services 
+    docker compose down 
+    docker compose up -d
+6. Clear cookies and cache in browser
