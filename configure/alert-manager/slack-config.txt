@@ -1,0 +1,7 @@
+redhat article to create slack apps and channel - 
+https://www.redhat.com/en/blog/how-to-integrate-openshift-namespace-monitoring-and-slack
+https://developers.redhat.com/articles/2023/10/03/how-configure-openshift-application-monitoring-and-alerts#
+
+slack hook - <>
+
+

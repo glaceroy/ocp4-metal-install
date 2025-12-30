@@ -1,0 +1,6 @@
+prometheusK8s:
+  retention: 24h                             
+  retentionSize: 5GB
+enableUserWorkload: true                     
+alertmanagerMain:
+  enableUserAlertmanagerConfig: true  
