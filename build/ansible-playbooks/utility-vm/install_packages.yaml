@@ -37,6 +37,7 @@
           - dhcp-server
           - haproxy
           - nfs-utils
+          - helm
         state: latest
 
     ###############################

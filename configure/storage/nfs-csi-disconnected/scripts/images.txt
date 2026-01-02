@@ -1,0 +1,6 @@
+gcr.io/k8s-staging-sig-storage/nfsplugin:canary
+registry.k8s.io/sig-storage/csi-node-driver-registrar:v2.15.0
+registry.k8s.io/sig-storage/csi-provisioner:v6.1.0
+registry.k8s.io/sig-storage/csi-resizer:v2.0.0
+registry.k8s.io/sig-storage/csi-snapshotter:v8.4.0
+registry.k8s.io/sig-storage/livenessprobe:v2.17.0

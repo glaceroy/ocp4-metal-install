@@ -1,0 +1,24 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - base/rendered.yaml
+images:
+  - name: gcr.io/k8s-staging-sig-storage/nfsplugin
+    newName: registry.cloud.lab:8443/csi-nfs/nfsplugin
+    newTag: :canary
+  - name: registry.k8s.io/sig-storage/csi-node-driver-registrar
+    newName: registry.cloud.lab:8443/csi-nfs/csi-node-driver-registrar
+    newTag: :v2.15.0
+  - name: registry.k8s.io/sig-storage/csi-provisioner
+    newName: registry.cloud.lab:8443/csi-nfs/csi-provisioner
+    newTag: :v6.1.0
+  - name: registry.k8s.io/sig-storage/csi-resizer
+    newName: registry.cloud.lab:8443/csi-nfs/csi-resizer
+    newTag: :v2.0.0
+  - name: registry.k8s.io/sig-storage/csi-snapshotter
+    newName: registry.cloud.lab:8443/csi-nfs/csi-snapshotter
+    newTag: :v8.4.0
+  - name: registry.k8s.io/sig-storage/livenessprobe
+    newName: registry.cloud.lab:8443/csi-nfs/livenessprobe
+    newTag: :v2.17.0
+namespace: nfs-csi

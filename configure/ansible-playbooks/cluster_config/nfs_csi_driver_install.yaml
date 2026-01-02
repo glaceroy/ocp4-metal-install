@@ -9,6 +9,160 @@
     local_registry: "registry.cloud.lab:8443"
     nfs_server: "10.10.0.1"
     nfs_share: "/export/openshift"
+    csi_namespace: "kube-system"
+
+    # Directory settings
+    workspace_dir: "/root/ocp4-metal-install/configure/storage"
+    deploy_dir: "{{ workspace_dir }}/nfs-csi-disconnected/deploy"
+    kustomize_dir: "{{ workspace_dir }}/nfs-csi-disconnected/kustomize"
+    scripts_dir: "{{ workspace_dir }}/nfs-csi-disconnected/scripts"
+
+    # Helm chart source
+    helm_chart_url: "https://github.com/kubernetes-csi/csi-driver-nfs"
+    helm_chart_version: "latest"  # choose version: latest, v4.10.0, etc.
+    helm_chart_path: "/root/csi-driver-nfs/charts/{{ helm_chart_version }}/csi-driver-nfs"
+
+  tasks:
+
+  - name: Create directory structure
+    file:
+      path: "{{ item }}"
+      state: directory
+      mode: '0755'
+    loop:
+      - "{{ deploy_dir }}"
+      - "{{ deploy_dir }}/base"
+      - "{{ kustomize_dir }}"
+      - "{{ kustomize_dir }}/base"
+      - "{{ scripts_dir }}"
+
+  - name: Clone NFS CSI driver repo to /root
+    git:
+      repo: "{{ helm_chart_url }}"
+      dest: "/root/csi-driver-nfs"
+      version: master
+      update: yes
+
+  - name: Render Helm templates into manifests
+    shell: |
+      helm template nfs-csi {{ helm_chart_path }} \
+        --namespace {{ csi_namespace }} \
+        --output-dir {{ deploy_dir }}/rendered \
+        --include-crds
+    args:
+      chdir: "/root/csi-driver-nfs"
+    register: helm_render
+    ignore_errors: false
+
+  - name: Combine all rendered YAMLs into a single manifest
+    shell: |
+      find {{ deploy_dir }}/rendered -type f -name '*.yaml' -exec cat {} + > {{ deploy_dir }}/base/rendered.yaml
+    args:
+      chdir: "{{ deploy_dir }}/rendered"
+    ignore_errors: false
+
+  - name: Copy rendered.yaml into kustomize/base folder for Kustomize
+    copy:
+      src: "{{ deploy_dir }}/base/rendered.yaml"
+      dest: "{{ kustomize_dir }}/base/rendered.yaml"
+
+  - name: Extract images from rendered manifest
+    shell: |
+      grep -oP 'image:\s*\K\S+' {{ deploy_dir }}/base/rendered.yaml | sort -u
+    register: extracted_images
+
+  - name: Write images.txt
+    copy:
+      dest: "{{ scripts_dir }}/images.txt"
+      content: |
+        {% for img in extracted_images.stdout_lines %}
+        {{ img | trim('"') }}
+        {% endfor %}
+
+  - name: Create mirror_images.sh script
+    copy:
+      dest: "{{ scripts_dir }}/mirror_images.sh"
+      mode: '0755'
+      content: |
+        #!/bin/bash
+        LOCAL_REG="{{ local_registry }}"
+        SCRIPT_DIR=$(dirname "$0")
+        cd $SCRIPT_DIR
+        while read IMAGE; do
+            IMAGE=$(echo $IMAGE | tr -d '"')
+            IMAGE_NAME=$(basename $IMAGE | cut -d':' -f1)
+            IMAGE_TAG=$(echo $IMAGE | cut -d':' -f2)
+            TARGET_IMAGE="$LOCAL_REG/csi-nfs/$IMAGE_NAME:$IMAGE_TAG"
+            echo "Mirroring $IMAGE -> $TARGET_IMAGE"
+            podman pull $IMAGE
+            podman tag $IMAGE $TARGET_IMAGE
+            podman push $TARGET_IMAGE
+        done < images.txt
+
+  - name: Create kustomization.yaml overlay
+    copy:
+      dest: "{{ kustomize_dir }}/kustomization.yaml"
+      content: |
+        apiVersion: kustomize.config.k8s.io/v1beta1
+        kind: Kustomization
+        resources:
+          - base/rendered.yaml
+        images:
+        {% for img in extracted_images.stdout_lines %}
+        {% set img_clean = img | trim('"') %}
+        {% set img_name = img_clean | regex_replace(':(.*)$','') %}
+        {% set img_tag = (img_clean | regex_search(':(.*)$')) | default('latest') %}
+          - name: {{ img_name }}
+            newName: {{ local_registry }}/csi-nfs/{{ img_name | basename }}
+            newTag: {{ img_tag }}
+        {% endfor %}
+        namespace: {{ csi_namespace }}
+
+  - name: Create apply_manifests.sh script
+    copy:
+      dest: "{{ scripts_dir }}/apply_manifests.sh"
+      mode: '0755'
+      content: |
+        #!/bin/bash
+        SCRIPT_DIR=$(dirname "$0")
+        cd $SCRIPT_DIR/../kustomize
+        kubectl apply -k .
+
+  - name: Create NFS StorageClass manifest
+    copy:
+      dest: "{{ deploy_dir }}/storageclass.yaml"
+      content: |
+        apiVersion: storage.k8s.io/v1
+        kind: StorageClass
+        metadata:
+          name: nfs-csi
+        provisioner: nfs.csi.k8s.io
+        parameters:
+          server: {{ nfs_server }}
+          share: {{ nfs_share }}
+        volumeBindingMode: WaitForFirstConsumer
+        allowVolumeExpansion: true
+        reclaimPolicy: Delete
+
+  - name: Apply StorageClass
+    command: kubectl apply -f {{ deploy_dir }}/storageclass.yaml
+    register: sc_apply
+    ignore_errors: false
+
+  - name: Show StorageClass apply result
+    debug:
+      var: sc_apply.stdout
+---
+- name: Disconnected NFS CSI Driver installation via Helm templates
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    # Cluster / registry settings
+    local_registry: "registry.cloud.lab:8443"
+    nfs_server: "10.10.0.1"
+    nfs_share: "/export/openshift"
     csi_namespace: "nfs-csi"
 
     # Directory settings
@@ -159,3 +313,45 @@
   - name: Show StorageClass apply result
     debug:
       var: sc_apply.stdout
+
+  - name: Mirror images to local registry
+    shell: "./mirror_images.sh"
+    args:
+      chdir: "{{ scripts_dir }}"
+    register: mirror_result
+    ignore_errors: false
+
+  - name: Apply NFS CSI manifests via Kustomize
+    shell: "./apply_manifests.sh"
+    args:
+      chdir: "{{ scripts_dir }}"
+    register: apply_result
+    ignore_errors: false
+
+  - name: Show Kustomize apply result
+    debug:
+      var: apply_result.stdout
+
+  - name: Wait for all NFS CSI pods to be running
+    k8s_info:
+      kind: Pod
+      namespace: "{{ csi_namespace }}"
+    register: csi_pods
+
+  - name: Show NFS CSI pods
+    debug:
+      var: csi_pods.resources | map(attribute='metadata.name') | list
+
+  - name: Show NFS StorageClass
+    shell: "oc get sc nfs-csi"
+    register: sc_check
+    ignore_errors: false
+
+  - name: Display StorageClass info
+    debug:
+      var: sc_check.stdout
+
+  - name: Remove cloned NFS CSI Helm repo
+    file:
+      path: "/root/csi-driver-nfs"
+      state: absent
