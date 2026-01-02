@@ -7,7 +7,7 @@
   vars:
     local_registry: "registry.cloud.lab:8443"
     nfs_server: "10.10.0.1"
-    nfs_share: "/export/openshift"
+    nfs_share: "/shares/openshift"
     csi_namespace: "kube-system" # NFS CSI driver typically runs in kube-system
     registry_user: "init"
     registry_pass: "yzI4QDhF6RElYi9JC38L2oO05x1HvVk7"
@@ -139,7 +139,7 @@
         apiVersion: storage.k8s.io/v1
         kind: StorageClass
         metadata:
-          name: nfs-csi
+          name: nfs-csi-storageclass
         provisioner: nfs.csi.k8s.io
         parameters:
           server: {{ nfs_server }}
