@@ -9,7 +9,7 @@ mirror:
       - amd64
 
   operators:
-    - catalog: registry.redhat.io/redhat/redhat-operator-index:v4.18.1
+    - catalog: registry.redhat.io/redhat/redhat-operator-index:v4.18
       packages:
         - name: kiali-ossm
           channels:
