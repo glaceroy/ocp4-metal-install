@@ -193,10 +193,11 @@
 
     - name: Configure NFS export for openshift
       lineinfile:
-        path: /etc/exports"
+        path: /etc/exports
         regexp: "^/shares/openshift"
         line: "/shares/openshift {{ server_ip }}/24(rw,sync,root_squash,no_subtree_check,no_wdelay)"
         create: yes
+        mode: '0644'
 
     - name: Reload NFS exports
       command: exportfs -rv
