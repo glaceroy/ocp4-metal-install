@@ -4,7 +4,7 @@ kind: Deployment
 apiVersion: apps/v1
 metadata:
   name: csi-nfs-controller
-  namespace: nfs-csi
+  namespace: kube-system
   labels:
     app.kubernetes.io/instance: "nfs-csi"
     app.kubernetes.io/managed-by: "Helm"
@@ -58,7 +58,7 @@ spec:
             - "-v=2"
             - "--csi-address=$(ADDRESS)"
             - "--leader-election"
-            - "--leader-election-namespace=nfs-csi"
+            - "--leader-election-namespace=kube-system"
             - "--extra-create-metadata=true"
             - "--feature-gates=HonorPVReclaimPolicy=true"
             - "--timeout=1200s"
@@ -87,7 +87,7 @@ spec:
             - "-csi-address=$(ADDRESS)"
             - "-v=2"
             - "-leader-election"
-            - "--leader-election-namespace=nfs-csi"
+            - "--leader-election-namespace=kube-system"
             - '-handle-volume-inuse-error=false'
           env:
             - name: ADDRESS
@@ -111,7 +111,7 @@ spec:
           args:
             - "--v=2"
             - "--csi-address=$(ADDRESS)"
-            - "--leader-election-namespace=nfs-csi"
+            - "--leader-election-namespace=kube-system"
             - "--leader-election"
             - "--timeout=1200s"
             - "--retry-interval-max=30m"
