@@ -1,16 +1,14 @@
-thanosRuler:
-  retention: 48h
-  volumeClaimTemplate:
-    spec:
-      volumeMode: Filesystem
-      resources:
-        requests:
-          storage: 1Gi
-prometheus:
-  retention: 48h
-  volumeClaimTemplate:
-    spec:
-      volumeMode: Filesystem
-      resources:
-        requests:
-          storage: 1Gi
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: user-workload-monitoring-config
+  namespace: openshift-user-workload-monitoring
+data:
+  config.yaml: |
+    prometheus: 
+      retention: 2d 
+      volumeClaimTemplate:
+        spec:
+          resources:
+            requests:
+              storage: 1Gi

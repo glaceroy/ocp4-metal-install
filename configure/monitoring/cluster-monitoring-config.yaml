@@ -1,6 +1,21 @@
-prometheusK8s:
-  retention: 24h                             
-  retentionSize: 5GB
-enableUserWorkload: true                     
-alertmanagerMain:
-  enableUserAlertmanagerConfig: true  
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cluster-monitoring-config
+  namespace: openshift-monitoring
+data:
+  config.yaml: |
+    enableUserWorkload: true
+    prometheusK8s:
+      retention: 2d
+      volumeClaimTemplate:
+        spec:
+          resources:
+            requests:
+              storage: 2Gi
+    alertmanagerMain:
+      volumeClaimTemplate:
+        spec:
+          resources:
+            requests:
+              storage: 2Gi

@@ -9,7 +9,7 @@ mirror:
       - amd64
 
   operators:
-    - catalog: registry.redhat.io/redhat/redhat-operator-index:v4.18
+    - catalog: registry.redhat.io/redhat/redhat-operator-index:v4.18.1
       packages:
         - name: kiali-ossm
           channels:
@@ -49,3 +49,13 @@ mirror:
           channels:
             - name: alpha
               minVersion: "0.7.13"
+
+        - name: metallb-operator
+          channels:
+            - name: stable
+              minVersion: "4.18.0-202511181540"
+
+        - name: nfs-csi-driver-operator
+          channels:
+            - name: stable
+              minVersion: "4.8.0-202410201507"
