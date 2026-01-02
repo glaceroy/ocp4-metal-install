@@ -8,7 +8,7 @@ oc-mirror --v2 docker://registry.cloud.lab:8443
 Note - /opt/oc-mirror/pull-secret.json should contain secrets for all the redhat registries and the local mirror registry
 
 oc-mirror --v2 docker://registry.cloud.lab:8443
---config /opt/oc-mirror/rh-op-imageset-config.yaml 
+--config /opt/oc-mirror/redhat-op-imageset-config.yaml 
 --workspace file:///opt/oc-mirror/mirror-workspace 
 --authfile /opt/oc-mirror/pull-secret.json 
 
