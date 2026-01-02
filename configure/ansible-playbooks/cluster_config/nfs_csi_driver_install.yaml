@@ -1,0 +1,114 @@
+---
+- name: Disconnected NFS CSI Driver install on OpenShift (latest version)
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    local_registry: "registry.cloud.lab:8443"
+    nfs_server: "10.10.0.1"
+    nfs_share: "/export/openshift"
+    playbook_dir: "{{ playbook_dir }}"
+    deploy_dir: "{{ playbook_dir }}/nfs-csi-disconnected/deploy"
+    kustomize_dir: "{{ playbook_dir }}/nfs-csi-disconnected/kustomize"
+    scripts_dir: "{{ playbook_dir }}/nfs-csi-disconnected/scripts"
+    upstream_manifest_url: "https://raw.githubusercontent.com/kubernetes-csi/csi-driver-nfs/master/deploy/kubernetes/manifest.yaml"
+
+  tasks:
+
+  - name: Create directory structure
+    file:
+      path: "{{ item }}"
+      state: directory
+      mode: '0755'
+    loop:
+      - "{{ deploy_dir }}/base"
+      - "{{ kustomize_dir }}"
+      - "{{ scripts_dir }}"
+
+  - name: Download latest upstream NFS CSI driver manifest
+    get_url:
+      url: "{{ upstream_manifest_url }}"
+      dest: "{{ deploy_dir }}/base/manifest.yaml"
+
+  - name: Extract images from manifest dynamically
+    shell: |
+      grep -oP 'image:\s*\K\S+' {{ deploy_dir }}/base/manifest.yaml | sort -u
+    register: extracted_images
+
+  - name: Write images.txt
+    copy:
+      dest: "{{ scripts_dir }}/images.txt"
+      content: |
+        {% for img in extracted_images.stdout_lines %}
+        {{ img }}
+        {% endfor %}
+
+  - name: Create mirror_images.sh script (dynamic images)
+    copy:
+      dest: "{{ scripts_dir }}/mirror_images.sh"
+      mode: '0755'
+      content: |
+        #!/bin/bash
+        LOCAL_REG="{{ local_registry }}"
+        SCRIPT_DIR=$(dirname "$0")
+        cd $SCRIPT_DIR
+        while read IMAGE; do
+            IMAGE_NAME=$(basename $IMAGE | cut -d':' -f1)
+            IMAGE_TAG=$(echo $IMAGE | cut -d':' -f2)
+            TARGET_IMAGE="$LOCAL_REG/csi-nfs/$IMAGE_NAME:$IMAGE_TAG"
+            echo "Mirroring $IMAGE -> $TARGET_IMAGE"
+            podman pull $IMAGE
+            podman tag $IMAGE $TARGET_IMAGE
+            podman push $TARGET_IMAGE
+        done < images.txt
+
+  - name: Create kustomize overlay dynamically
+    copy:
+      dest: "{{ kustomize_dir }}/kustomization.yaml"
+      content: |
+        apiVersion: kustomize.config.k8s.io/v1beta1
+        kind: Kustomization
+        resources:
+          - ../../deploy/base/manifest.yaml
+        images:
+          {% for img in extracted_images.stdout_lines %}
+          - name: {{ img | regex_replace(':(.*)$','') }}
+            newName: {{ local_registry }}/csi-nfs/{{ img | basename | regex_replace(':(.*)$','') }}
+            newTag: {{ img | regex_search(':(.*)$') }}
+          {% endfor %}
+
+  - name: Create apply_manifests.sh script
+    copy:
+      dest: "{{ scripts_dir }}/apply_manifests.sh"
+      mode: '0755'
+      content: |
+        #!/bin/bash
+        SCRIPT_DIR=$(dirname "$0")
+        cd $SCRIPT_DIR/../kustomize
+        kubectl apply -k .
+
+  - name: Create NFS StorageClass manifest
+    copy:
+      dest: "{{ deploy_dir }}/storageclass.yaml"
+      content: |
+        apiVersion: storage.k8s.io/v1
+        kind: StorageClass
+        metadata:
+          name: nfs-csi
+        provisioner: nfs.csi.k8s.io
+        parameters:
+          server: {{ nfs_server }}
+          share: {{ nfs_share }}
+        volumeBindingMode: WaitForFirstConsumer
+        allowVolumeExpansion: true
+        reclaimPolicy: Delete
+
+  - name: Apply StorageClass
+    command: kubectl apply -f {{ deploy_dir }}/storageclass.yaml
+    register: sc_apply
+    ignore_errors: false
+
+  - name: Show StorageClass apply result
+    debug:
+      var: sc_apply.stdout

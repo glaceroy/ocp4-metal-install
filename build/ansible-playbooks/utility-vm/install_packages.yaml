@@ -181,7 +181,7 @@
 
     - name: Configure NFS shares
       file:
-        path: /shares/registry
+        path: /shares/openshift
         state: directory
         owner: nobody
         group: nobody
@@ -191,11 +191,11 @@
       set_fact:
         server_ip: "{{ ansible_default_ipv4.address }}"
 
-    - name: Configure NFS export for registry
+    - name: Configure NFS export for openshift
       lineinfile:
         path: /etc/exports"
-        regexp: "^/shares/registry"
-        line: "/shares/registry {{ server_ip }}/24(rw,sync,root_squash,no_subtree_check,no_wdelay)"
+        regexp: "^/shares/openshift"
+        line: "/shares/openshift {{ server_ip }}/24(rw,sync,root_squash,no_subtree_check,no_wdelay)"
         create: yes
 
     - name: Reload NFS exports
