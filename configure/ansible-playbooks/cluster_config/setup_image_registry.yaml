@@ -1,0 +1,70 @@
+---
+- name: Configure OpenShift Image Registry (Disconnected)
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    registry_namespace: "openshift-image-registry"
+    registry_pvc_name: "registry-storage"
+    registry_storage_class: "nfs-csi-storageclass"
+    registry_storage_size: "2Gi"
+    registry_replicas: 1
+
+  tasks:
+
+  ###########################################################################
+  # Ensure registry PVC exists with ReadWriteMany
+  ###########################################################################
+
+  - name: Ensure PVC exists for registry storage
+    k8s:
+      state: present
+      definition:
+        apiVersion: v1
+        kind: PersistentVolumeClaim
+        metadata:
+          name: "{{ registry_pvc_name }}"
+          namespace: "{{ registry_namespace }}"
+        spec:
+          accessModes:
+            - ReadWriteMany
+          resources:
+            requests:
+              storage: "{{ registry_storage_size }}"
+          storageClassName: "{{ registry_storage_class }}"
+
+  ###########################################################################
+  # Patch Image Registry operator
+  ###########################################################################
+
+  - name: Patch Image Registry to use PVC and enable default route
+    shell: |
+      oc patch configs.imageregistry.operator.openshift.io/cluster \
+        --type merge \
+        -p '{"spec":{"managementState":"Managed","replicas":{{ registry_replicas }},"storage":{"pvc":{"claim":"{{ registry_pvc_name }}"}},"defaultRoute":true}}'
+    register: registry_patch
+    changed_when: true
+
+  ###########################################################################
+  # Wait for registry pod
+  ###########################################################################
+
+  - name: Wait for Image Registry pod to be running
+    shell: |
+      oc wait --for=condition=Ready pod \
+        -l docker-registry=default \
+        -n {{ registry_namespace }} \
+        --timeout=600s
+    register: registry_wait
+    changed_when: false
+
+  - name: Show Image Registry pod status
+    shell: oc get pods -n {{ registry_namespace }} -l docker-registry=default
+    register: registry_pods
+    changed_when: false
+
+  - name: Display registry pods
+    debug:
+      msg: "{{ item }}"
+    loop: "{{ registry_pods.stdout_lines }}"
