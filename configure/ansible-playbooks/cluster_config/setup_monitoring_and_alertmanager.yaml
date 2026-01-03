@@ -1,0 +1,189 @@
+---
+- name: Configure OpenShift Monitoring & Alerting
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+
+    kubeconfig: "{{ lookup('env','KUBECONFIG') }}"
+    monitoring_namespace: openshift-monitoring
+    user_monitoring_namespace: openshift-user-workload-monitoring
+
+    storage_class: nfs-csi-storageclass
+    storage_size: 2Gi
+    retention: 2d
+
+    slack_webhook_url: "https://hooks.slack.com/services/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"
+    slack_watchdog_channel: "#ocp-watchdog-alerts"
+    slack_critical_channel: "#ocp-critical-alerts"
+    slack_warning_channel: "#ocp-warning-alerts"
+    slack_info_channel: "#ocp-info-alerts"
+
+  tasks:
+
+  ###########################################################################
+  # Namespaces
+  ###########################################################################
+
+  - name: Ensure monitoring namespaces exist
+    k8s:
+      kubeconfig: "{{ kubeconfig }}"
+      api_version: v1
+      kind: Namespace
+      name: "{{ item }}"
+      state: present
+    loop:
+      - "{{ monitoring_namespace }}"
+      - "{{ user_monitoring_namespace }}"
+
+  ###########################################################################
+  # Cluster Monitoring ConfigMap
+  ###########################################################################
+
+  - name: Configure cluster monitoring
+    k8s:
+      kubeconfig: "{{ kubeconfig }}"
+      state: present
+      definition:
+        apiVersion: v1
+        kind: ConfigMap
+        metadata:
+          name: cluster-monitoring-config
+          namespace: "{{ monitoring_namespace }}"
+        data:
+          config.yaml: |
+            enableUserWorkload: true
+            prometheusK8s:
+              retention: "{{ retention }}"
+              volumeClaimTemplate:
+                spec:
+                  storageClassName: "{{ storage_class }}"
+                  resources:
+                    requests:
+                      storage: "{{ storage_size }}"
+            alertmanagerMain:
+              volumeClaimTemplate:
+                spec:
+                  storageClassName: "{{ storage_class }}"
+                  resources:
+                    requests:
+                      storage: "{{ storage_size }}"
+
+  ###########################################################################
+  # User Workload Monitoring ConfigMap
+  ###########################################################################
+
+  - name: Configure user workload monitoring
+    k8s:
+      kubeconfig: "{{ kubeconfig }}"
+      state: present
+      definition:
+        apiVersion: v1
+        kind: ConfigMap
+        metadata:
+          name: user-workload-monitoring-config
+          namespace: "{{ user_monitoring_namespace }}"
+        data:
+          config.yaml: |
+            prometheus:
+              retention: "{{ retention }}"
+              volumeClaimTemplate:
+                spec:
+                  storageClassName: "{{ storage_class }}"
+                  resources:
+                    requests:
+                      storage: "{{ storage_size }}"
+
+  ###########################################################################
+  # Alertmanager Configuration (external template)
+  ###########################################################################
+
+  - name: Load Alertmanager template file
+    slurp:
+      src: alertmanager_template.yaml.j2
+    register: am_template
+
+  - name: Convert template to string
+    set_fact:
+      am_config_raw: "{{ am_template.content | b64decode }}"
+
+  - name: Replace placeholders with variables
+    set_fact:
+      am_config_final: >-
+        {{ am_config_raw
+          | replace('__SLACK_WEBHOOK__', slack_webhook_url)
+          | replace('__WATCHDOG_CHANNEL__', slack_watchdog_channel)
+          | replace('__CRITICAL_CHANNEL__', slack_critical_channel)
+          | replace('__WARNING_CHANNEL__', slack_warning_channel)
+          | replace('__INFO_CHANNEL__', slack_info_channel)
+        }}
+
+  - name: Base64 encode final Alertmanager config
+    set_fact:
+      am_config_b64: "{{ am_config_final | b64encode }}"
+
+  - name: Apply Alertmanager configuration Secret
+    k8s:
+      kubeconfig: "{{ kubeconfig }}"
+      state: present
+      definition:
+        apiVersion: v1
+        kind: Secret
+        metadata:
+          name: alertmanager-main
+          namespace: "{{ monitoring_namespace }}"
+        type: Opaque
+        data:
+          alertmanager.yaml: "{{ am_config_b64 }}"
+
+  ###########################################################################
+  # Wait for Monitoring Pods
+  ###########################################################################
+
+  - name: Wait for Prometheus pods to be running
+    shell: >
+      oc wait --for=condition=Ready pod
+      -l app.kubernetes.io/name=prometheus
+      -n {{ monitoring_namespace }}
+      --timeout=300s
+    changed_when: false
+
+  - name: Wait for Alertmanager pods to be running
+    shell: >
+      oc wait --for=condition=Ready pod
+      -l app.kubernetes.io/name=alertmanager
+      -n {{ monitoring_namespace }}
+      --timeout=300s
+    changed_when: false
+
+  - name: Wait for User Workload Prometheus StatefulSet
+    shell: >
+      oc rollout status statefulset/prometheus-user-workload
+      -n {{ user_monitoring_namespace }}
+      --timeout=300s
+    changed_when: false
+
+  ###########################################################################
+  # Verification
+  ###########################################################################
+
+  - name: Get monitoring pods
+    shell: oc get pods -n {{ monitoring_namespace }}
+    register: monitoring_pods
+    changed_when: false
+
+  - name: Get user workload monitoring pods
+    shell: oc get pods -n {{ user_monitoring_namespace }}
+    register: user_monitoring_pods
+    changed_when: false
+
+  - name: Display cluster monitoring pods
+    debug:
+      msg: "{{ item }}"
+    loop: "{{ monitoring_pods.stdout_lines }}"
+
+  - name: Display user workload monitoring pods
+    debug:
+      msg: "{{ item }}"
+    loop: "{{ user_monitoring_pods.stdout_lines }}"

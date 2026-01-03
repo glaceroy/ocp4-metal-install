@@ -1,0 +1,139 @@
+global:
+  http_config:
+    proxy_from_environment: true
+
+inhibit_rules:
+  - equal: ["namespace", "alertname"]
+    source_matchers: ["severity = critical"]
+    target_matchers: ["severity =~ warning|info"]
+  - equal: ["namespace", "alertname"]
+    source_matchers: ["severity = warning"]
+    target_matchers: ["severity = info"]
+  - equal: ["alertname", "namespace"]
+    source_match: { severity: critical }
+    target_match: { severity: warning }
+  - equal: ["alertname", "namespace"]
+    source_match: { severity: critical }
+    target_match: { severity: info }
+  - equal: ["alertname", "namespace"]
+    source_match: { severity: warning }
+    target_match: { severity: info }
+
+receivers:
+  - name: Default
+  - name: Watchdog
+  - name: Critical
+
+  - name: watchdog
+    slack_configs:
+      - api_url: "__SLACK_WEBHOOK__"
+        channel: "__WATCHDOG_CHANNEL__"
+        send_resolved: true
+        title: |
+          [{{ .Status | toUpper }}] 🔔 Watchdog – Alertmanager Heartbeat
+        text: |
+          *Purpose:* Alertmanager self-check
+          *Status:* {{ .Status }}
+
+          This alert confirms Alertmanager is running.
+          No action required.
+
+  - name: cluster-critical
+    slack_configs:
+      - api_url: "__SLACK_WEBHOOK__"
+        channel: "__CRITICAL_CHANNEL__"
+        send_resolved: true
+        title: |
+          🚨 [{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}]
+          {{ .CommonLabels.alertname }}
+        text: |
+          *Cluster:* {{ .CommonLabels.cluster | default "cluster" }}
+          *Namespace:* {{ .CommonLabels.namespace | default "global" }}
+          *Severity:* critical
+
+          {{ if gt (len .Alerts.Firing) 0 }}
+          *🚨 Alerts Firing*
+          {{ range .Alerts.Firing }}
+          • *{{ .Annotations.identifier | default .Labels.alertname }}*
+            {{ .Annotations.description | default .Annotations.summary }}
+          {{ end }}
+          {{ end }}
+
+          {{ if gt (len .Alerts.Resolved) 0 }}
+          *✅ Alerts Resolved*
+          {{ range .Alerts.Resolved }}
+          • *{{ .Annotations.identifier | default .Labels.alertname }}*
+            {{ .Annotations.description | default .Annotations.summary }}
+          {{ end }}
+          {{ end }}
+
+  - name: cluster-warning
+    slack_configs:
+      - api_url: "__SLACK_WEBHOOK__"
+        channel: "__WARNING_CHANNEL__"
+        send_resolved: true
+        title: |
+          ⚠️ [{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}]
+          {{ .CommonLabels.alertname }}
+        text: |
+          *Cluster:* {{ .CommonLabels.cluster | default "cluster" }}
+          *Namespace:* {{ .CommonLabels.namespace | default "global" }}
+          *Severity:* warning
+
+          {{ if gt (len .Alerts.Firing) 0 }}
+          *⚠️ Alerts Firing*
+          {{ range .Alerts.Firing }}
+          • *{{ .Annotations.identifier | default .Labels.alertname }}*
+            {{ .Annotations.description | default .Annotations.summary }}
+          {{ end }}
+          {{ end }}
+
+          {{ if gt (len .Alerts.Resolved) 0 }}
+          *✅ Alerts Resolved*
+          {{ range .Alerts.Resolved }}
+          • *{{ .Annotations.identifier | default .Labels.alertname }}*
+            {{ .Annotations.description | default .Annotations.summary }}
+          {{ end }}
+          {{ end }}
+
+  - name: cluster-info
+    slack_configs:
+      - api_url: "__SLACK_WEBHOOK__"
+        channel: "__INFO_CHANNEL__"
+        send_resolved: true
+        title: |
+          ℹ️ [{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}]
+          {{ .CommonLabels.alertname }}
+        text: |
+          *Cluster:* {{ .CommonLabels.cluster | default "cluster" }}
+          *Namespace:* {{ .CommonLabels.namespace | default "global" }}
+          *Severity:* info
+
+          {{ if gt (len .Alerts.Firing) 0 }}
+          *ℹ️ Alerts Firing*
+          {{ range .Alerts.Firing }}
+          • *{{ .Annotations.identifier | default .Labels.alertname }}*
+            {{ .Annotations.description | default .Annotations.summary }}
+          {{ end }}
+          {{ end }}
+
+          {{ if gt (len .Alerts.Resolved) 0 }}
+          *✅ Alerts Resolved*
+          {{ range .Alerts.Resolved }}
+          • *{{ .Annotations.identifier | default .Labels.alertname }}*
+            {{ .Annotations.description | default .Annotations.summary }}
+          {{ end }}
+          {{ end }}
+
+route:
+  group_by: ["alertname", "cluster", "namespace", "severity"]
+  receiver: Default
+  routes:
+    - match: { alertname: Watchdog }
+      receiver: watchdog
+    - match: { severity: critical }
+      receiver: cluster-critical
+    - match: { severity: warning }
+      receiver: cluster-warning
+    - match: { severity: info }
+      receiver: cluster-info
